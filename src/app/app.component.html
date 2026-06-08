@@ -1,0 +1,49 @@
+<ion-app>
+
+  <ion-split-pane contentId="main-content">
+
+    <!-- MENÚ LATERAL -->
+    <ion-menu contentId="main-content">
+
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>FinanzApp</ion-title>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content>
+
+        <ion-list>
+          <ion-item routerLink="/home">
+            🏠 Inicio
+          </ion-item>
+        </ion-list>
+
+      </ion-content>
+
+    </ion-menu>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div id="main-content">
+
+      <!-- 🔴🟢 BANNER GLOBAL DE RED -->
+      <ion-card color="success" *ngIf="isOnline">
+        <ion-card-content>
+          🟢 Conectado a Internet
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card color="danger" *ngIf="!isOnline">
+        <ion-card-content>
+          🔴 Sin conexión a Internet
+        </ion-card-content>
+      </ion-card>
+
+      <!-- AQUÍ SE CARGAN LAS PÁGINAS -->
+      <ion-router-outlet></ion-router-outlet>
+
+    </div>
+
+  </ion-split-pane>
+
+</ion-app>

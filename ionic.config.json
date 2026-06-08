@@ -1,0 +1,7 @@
+{
+  "name": "proyectoyl",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
