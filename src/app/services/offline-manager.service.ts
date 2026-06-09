@@ -55,7 +55,6 @@ export class OfflineManagerService {
 
   private async loadQueue(): Promise<void> {
     try {
-      // ✅ CORRECTO: this.storage.get() en lugar de getItem()
       const raw = await this.storage.get(this.QUEUE_KEY);
       const operations: PendingOperation[] = raw ? JSON.parse(raw) : [];
       this.queueSubject.next(operations);
@@ -81,12 +80,11 @@ export class OfflineManagerService {
     };
 
     const updatedQueue = [...this.queueSubject.value, operation];
-    // ✅ CORRECTO: this.storage.set() en lugar de setItem()
     await this.storage.set(this.QUEUE_KEY, JSON.stringify(updatedQueue));
     this.queueSubject.next(updatedQueue);
     this.updateStatus();
 
-    console.log(`✅ Operación ${operation.id} guardada localmente`);
+    console.log(`Operación ${operation.id} guardada localmente`);
     return operation;
   }
 
@@ -100,7 +98,6 @@ export class OfflineManagerService {
 
   async removePendingOperation(operationId: string): Promise<void> {
     const updatedQueue = this.queueSubject.value.filter(op => op.id !== operationId);
-    // ✅ CORRECTO: this.storage.set() en lugar de setItem()
     await this.storage.set(this.QUEUE_KEY, JSON.stringify(updatedQueue));
     this.queueSubject.next(updatedQueue);
     this.updateStatus();
@@ -121,7 +118,6 @@ export class OfflineManagerService {
         return;
       }
 
-      // ✅ CORRECTO: this.storage.set() en lugar de setItem()
       await this.storage.set(this.QUEUE_KEY, JSON.stringify(queue));
       this.queueSubject.next(queue);
       this.updateStatus();
@@ -130,27 +126,23 @@ export class OfflineManagerService {
 
   async saveLocalData(key: string, data: any): Promise<void> {
     const storageKey = `${this.STORAGE_PREFIX}${key}`;
-    // ✅ CORRECTO: this.storage.set() en lugar de setItem()
     await this.storage.set(storageKey, JSON.stringify(data));
     console.log(`💾 Datos locales guardados en: ${storageKey}`);
   }
 
   async getLocalData(key: string): Promise<any> {
     const storageKey = `${this.STORAGE_PREFIX}${key}`;
-    // ✅ CORRECTO: this.storage.get() en lugar de getItem()
     const raw = await this.storage.get(storageKey);
     return raw ? JSON.parse(raw) : null;
   }
 
   async removeLocalData(key: string): Promise<void> {
     const storageKey = `${this.STORAGE_PREFIX}${key}`;
-    // ✅ CORRECTO: this.storage.remove() en lugar de removeItem()
     await this.storage.remove(storageKey);
     console.log(`🗑️ Datos locales eliminados: ${storageKey}`);
   }
 
   async clearQueue(): Promise<void> {
-    // ✅ CORRECTO: this.storage.remove() en lugar de removeItem()
     await this.storage.remove(this.QUEUE_KEY);
     this.queueSubject.next([]);
     this.updateStatus();
