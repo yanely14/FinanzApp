@@ -12,13 +12,9 @@
               [class.online]="isOnline"
               [class.offline]="!isOnline">
         </span>
-
-        <span>
-          {{ isOnline ? 'Online' : 'Offline' }}
-        </span>
+        <span>{{ isOnline ? 'Online' : 'Offline' }}</span>
       </div>
     </ion-buttons>
-
   </ion-toolbar>
 </ion-header>
 
@@ -33,12 +29,10 @@
         ESTADO DE CONECTIVIDAD
       </ion-card-title>
     </ion-card-header>
-
     <ion-card-content>
 
       <div class="fila-estado">
         <span class="label">Estado actual</span>
-
         <span class="valor"
               [class.online]="isOnline"
               [class.offline]="!isOnline">
@@ -48,14 +42,11 @@
 
       <div class="fila-estado">
         <span class="label">Tipo de red</span>
-        <span class="valor azul">
-          {{ tipoRed }}
-        </span>
+        <span class="valor azul">{{ tipoRed }}</span>
       </div>
 
       <div class="fila-estado">
         <span class="label">Cambios pendientes</span>
-
         <span class="valor"
               [class.alerta]="datosPendientes.length > 0">
           {{ datosPendientes.length }}
@@ -78,109 +69,78 @@
 
   <!-- PENDIENTES -->
   <ion-card class="card-datos" *ngIf="datosPendientes.length > 0">
-
     <ion-card-header>
       <ion-card-title>
         <ion-icon name="time-outline"></ion-icon>
         PENDIENTES DE SINCRONIZAR
       </ion-card-title>
     </ion-card-header>
-
     <ion-card-content>
-
       <ion-list lines="none">
-
-        <ion-item *ngFor="let item of datosPendientes"
-                  class="item-dato pendiente">
-
-          <ion-icon
-            name="cloud-offline-outline"
-            slot="start"
-            class="icono-pendiente">
-          </ion-icon>
-
+        <ion-item *ngFor="let item of datosPendientes" class="item-dato pendiente">
+          <ion-icon name="cloud-offline-outline" slot="start" class="icono-pendiente"></ion-icon>
           <ion-label>
             <h3>{{ item.titulo }}</h3>
             <p>Guardado a las {{ item.hora }}</p>
           </ion-label>
-
         </ion-item>
-
       </ion-list>
-
     </ion-card-content>
-
   </ion-card>
 
   <!-- SINCRONIZADOS -->
   <ion-card class="card-datos" *ngIf="datosSincronizados.length > 0">
-
     <ion-card-header>
       <ion-card-title>
         <ion-icon name="cloud-upload-outline"></ion-icon>
         DATOS SINCRONIZADOS
       </ion-card-title>
     </ion-card-header>
-
     <ion-card-content>
-
       <ion-list lines="none">
-
-        <ion-item *ngFor="let item of datosSincronizados"
-                  class="item-dato">
-
-          <ion-icon
-            name="document-text-outline"
-            slot="start"
-            class="icono-sync">
-          </ion-icon>
-
+        <ion-item *ngFor="let item of datosSincronizados" class="item-dato">
+          <ion-icon name="document-text-outline" slot="start" class="icono-sync"></ion-icon>
           <ion-label>
             <h3>{{ item.titulo }}</h3>
             <p>Sincronizado a las {{ item.hora }}</p>
           </ion-label>
-
         </ion-item>
-
       </ion-list>
-
     </ion-card-content>
-
   </ion-card>
 
   <!-- VACÍO -->
   <div class="estado-vacio"
        *ngIf="datosSincronizados.length === 0 && datosPendientes.length === 0">
-
     <ion-icon name="sync-outline"></ion-icon>
-
     <p>No hay datos aún.</p>
-
-    <span>
-      Agrega un elemento para comenzar.
-    </span>
-
+    <span>Agrega un elemento para comenzar.</span>
   </div>
 
   <!-- INPUT -->
   <div class="input-nuevo">
-
     <ion-input
       [(ngModel)]="nuevoElemento"
       placeholder="Nuevo elemento..."
       class="campo-nuevo"
       (keyup.enter)="agregarElemento()">
     </ion-input>
-
     <ion-button
       color="primary"
       shape="round"
+      [disabled]="isSaving"
       (click)="agregarElemento()">
-
       <ion-icon name="add-outline"></ion-icon>
-
     </ion-button>
-
   </div>
+
+  <!-- TOAST -->
+  <ion-toast
+    [isOpen]="showToast"
+    [message]="toastMessage"
+    [color]="toastColor"
+    [duration]="4000"
+    position="bottom">
+  </ion-toast>
 
 </ion-content>

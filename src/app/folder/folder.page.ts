@@ -1,40 +1,37 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonButtons,
-  IonMenuButton,
-  IonBadge,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonIcon,
-  IonInput,
-  IonButton
+  IonHeader, IonToolbar, IonTitle, IonContent,
+  IonButtons, IonMenuButton, IonButton, IonIcon,
+  IonCard, IonCardContent, IonCardHeader, IonCardTitle,
+  IonItem, IonLabel, IonInput, IonList,
+  IonSpinner, IonToast, IonNote
 } from '@ionic/angular/standalone';
-
+import { HttpClient } from '@angular/common/http';
+import { NetworkService } from '../services/network.service';
+import { OfflineManagerService, OfflineQueueStatus } from '../services/offline-manager.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
 import {
-  addOutline,
-  cloudUploadOutline,
+  wifiOutline,
   cloudOfflineOutline,
+  cloudUploadOutline,
   timeOutline,
   syncOutline,
-  wifiOutline,
-  documentTextOutline
+  documentTextOutline,
+  addOutline
 } from 'ionicons/icons';
 
-import { NetworkService } from '../services/network.service';
+export interface ElementoLocal {
+  id: string;
+  titulo: string;
+  hora: string;
+  timestamp: number;
+  sincronizado: boolean;
+}
 
 @Component({
   selector: 'app-folder',
@@ -44,109 +41,252 @@ import { NetworkService } from '../services/network.service';
   imports: [
     CommonModule,
     FormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonCardTitle,
-    IonButtons,
-    IonMenuButton,
-    IonBadge,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonIcon,
-    IonInput,
-    IonButton
-  ],
+    ReactiveFormsModule,
+    IonHeader, IonToolbar, IonTitle, IonContent,
+    IonButtons, IonMenuButton, IonButton, IonIcon,
+    IonCard, IonCardContent, IonCardHeader, IonCardTitle,
+    IonItem, IonLabel, IonInput, IonList,
+    IonSpinner, IonToast, IonNote
+  ]
 })
-export class FolderPage implements OnInit {
+export class FolderPage implements OnInit, OnDestroy {
 
-  public folder!: string;
+  // ── Variables del template original ──────────────────────────────────────────
   isOnline: boolean = true;
   tipoRed: string = 'Desconocida';
+  datosPendientes: ElementoLocal[] = [];
+  datosSincronizados: ElementoLocal[] = [];
   ultimaSync: string = '';
   nuevoElemento: string = '';
-  datosPendientes: any[] = [];
-  datosSincronizados: any[] = [];
+
+  // ── Variables de estado interno ───────────────────────────────────────────────
+  isSaving: boolean = false;
+  showToast: boolean = false;
+  toastMessage: string = '';
+  toastColor: 'success' | 'warning' | 'danger' = 'success';
+
+  private destroy$ = new Subject<void>();
+  private readonly API_URL = 'https://api.tuservidor.com'; // 🔁 Cambia por tu API real
+  private readonly STORAGE_KEY_PENDIENTES   = 'elementos_pendientes';
+  private readonly STORAGE_KEY_SINCRONIZADOS = 'elementos_sincronizados';
 
   constructor(
-    private activatedRoute: ActivatedRoute,
-    private networkService: NetworkService
+    private route: ActivatedRoute,
+    private http: HttpClient,
+    private networkService: NetworkService,
+    private offlineManager: OfflineManagerService
   ) {
     addIcons({
-      addOutline,
-      cloudUploadOutline,
-      cloudOfflineOutline,
-      timeOutline,
-      syncOutline,
-      wifiOutline,
-      documentTextOutline
+      'wifi-outline':           wifiOutline,
+      'cloud-offline-outline':  cloudOfflineOutline,
+      'cloud-upload-outline':   cloudUploadOutline,
+      'time-outline':           timeOutline,
+      'sync-outline':           syncOutline,
+      'document-text-outline':  documentTextOutline,
+      'add-outline':            addOutline
     });
   }
 
- ngOnInit() {
+  ngOnInit(): void {
+    this.watchNetworkStatus();
+    this.watchOfflineQueue();
+    this.cargarDatosLocales();
 
-  this.folder =
-    this.activatedRoute.snapshot.paramMap.get('id') as string;
+    window.addEventListener('connection-restored', this.onConnectionRestored);
+    window.addEventListener('manual-sync',         this.onManualSync);
+  }
 
-  this.networkService
-    .getNetworkStatus()
-    .subscribe(status => {
+  // ─── MONITOREAR RED ───────────────────────────────────────────────────────────
 
-      this.isOnline = status;
+  private watchNetworkStatus(): void {
+    this.networkService.getNetworkStatus()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((online: boolean) => {
+        this.isOnline = online;
+        if (online) {
+          this.syncPendingOperations();
+        }
+      });
 
-      if (status) {
-        this.ultimaSync =
-          new Date().toLocaleString();
+    // Obtener tipo de red desde el servicio
+    // Si tu NetworkService expone networkType, úsalo así:
+    // this.networkService.getNetworkType()
+    //   .pipe(takeUntil(this.destroy$))
+    //   .subscribe((tipo: string) => this.tipoRed = tipo);
+  }
 
-        this.sincronizarPendientes();
-      }
-    });
+  private watchOfflineQueue(): void {
+    this.offlineManager.status$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((status: OfflineQueueStatus) => {
+        if (status.lastSyncTime) {
+          const fecha = new Date(status.lastSyncTime);
+          this.ultimaSync = fecha.toLocaleTimeString('es-DO', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+        }
+      });
+  }
 
-  this.networkService
-    .getNetworkType()
-    .subscribe(tipo => {
+  // ─── CARGAR DATOS LOCALES ─────────────────────────────────────────────────────
 
-      this.tipoRed = tipo;
+  private async cargarDatosLocales(): Promise<void> {
+    const pendientes    = await this.offlineManager.getLocalData(this.STORAGE_KEY_PENDIENTES);
+    const sincronizados = await this.offlineManager.getLocalData(this.STORAGE_KEY_SINCRONIZADOS);
 
-    });
+    this.datosPendientes    = pendientes    ?? [];
+    this.datosSincronizados = sincronizados ?? [];
+  }
 
-}
+  // ─── AGREGAR ELEMENTO — LÓGICA CONDICIONAL CENTRAL ───────────────────────────
 
-  agregarElemento() {
+  async agregarElemento(): Promise<void> {
     if (!this.nuevoElemento.trim()) return;
 
-    const nuevoItem = {
-      titulo: this.nuevoElemento,
-      hora: new Date().toLocaleTimeString(),
-      sincronizado: this.isOnline
+    this.isSaving = true;
+
+    const ahora = new Date();
+    const elemento: ElementoLocal = {
+      id:           `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      titulo:       this.nuevoElemento.trim(),
+      hora:         ahora.toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' }),
+      timestamp:    ahora.getTime(),
+      sincronizado: false
     };
 
     if (this.isOnline) {
-      // Si hay conexión se guarda directo como sincronizado
-      this.datosSincronizados.unshift(nuevoItem);
-      this.ultimaSync = new Date().toLocaleString();
+      // 🟢 ONLINE: enviar al servidor
+      await this.guardarOnline(elemento);
     } else {
-      // Sin conexión se guarda como pendiente
-      this.datosPendientes.unshift(nuevoItem);
+      // 🔴 OFFLINE: guardar localmente
+      await this.guardarOffline(elemento);
     }
 
     this.nuevoElemento = '';
+    this.isSaving = false;
   }
 
-  sincronizarPendientes() {
-    if (this.datosPendientes.length === 0) return;
+  // ─── CASO ONLINE ─────────────────────────────────────────────────────────────
 
-    // Al recuperar conexión mueve todos los pendientes a sincronizados
-    this.datosPendientes.forEach(item => {
-      this.datosSincronizados.unshift({ ...item, sincronizado: true });
-    });
+  private async guardarOnline(elemento: ElementoLocal): Promise<void> {
+    try {
+      await this.http.post(`${this.API_URL}/elementos`, elemento).toPromise();
 
-    this.datosPendientes = [];
-    this.ultimaSync = new Date().toLocaleString();
+      // Marcar como sincronizado y mover a la lista correcta
+      elemento.sincronizado = true;
+      this.datosSincronizados = [elemento, ...this.datosSincronizados];
+      await this.offlineManager.saveLocalData(
+        this.STORAGE_KEY_SINCRONIZADOS,
+        this.datosSincronizados
+      );
+
+      this.showToastMsg('✅ Guardado en el servidor', 'success');
+    } catch (error) {
+      console.error('Error al enviar al servidor, guardando offline:', error);
+      // Si falla el servidor, guardar offline como respaldo
+      await this.guardarOffline(elemento);
+    }
+  }
+
+  // ─── CASO OFFLINE ────────────────────────────────────────────────────────────
+
+  private async guardarOffline(elemento: ElementoLocal): Promise<void> {
+    try {
+      // Agregar a lista de pendientes en memoria
+      this.datosPendientes = [elemento, ...this.datosPendientes];
+
+      // Persistir lista de pendientes en storage
+      await this.offlineManager.saveLocalData(
+        this.STORAGE_KEY_PENDIENTES,
+        this.datosPendientes
+      );
+
+      // Encolar operación para sincronizar después
+      await this.offlineManager.addPendingOperation(
+        'POST',
+        '/elementos',
+        elemento
+      );
+
+      this.showToastMsg(
+        `📱 Guardado localmente. Se sincronizará al recuperar conexión.`,
+        'warning'
+      );
+    } catch (error) {
+      console.error('Error al guardar offline:', error);
+      this.showToastMsg('❌ Error al guardar localmente', 'danger');
+    }
+  }
+
+  // ─── SINCRONIZACIÓN AUTOMÁTICA ────────────────────────────────────────────────
+
+  private onConnectionRestored = (): void => { this.syncPendingOperations(); };
+  private onManualSync         = (): void => { this.syncPendingOperations(); };
+
+  async syncPendingOperations(): Promise<void> {
+    if (!this.isOnline) return;
+
+    const pending = await this.offlineManager.getPendingOperations();
+    if (pending.length === 0) return;
+
+    this.offlineManager.setSyncing(true);
+    console.log(`🔄 Sincronizando ${pending.length} operación(es)...`);
+
+    for (const op of pending) {
+      try {
+        const url = `${this.API_URL}${op.endpoint}`;
+
+        switch (op.type) {
+          case 'POST':  await this.http.post(url,  op.payload).toPromise(); break;
+          case 'PUT':   await this.http.put(url,   op.payload).toPromise(); break;
+          case 'DELETE':await this.http.delete(url).toPromise();            break;
+          case 'PATCH': await this.http.patch(url, op.payload).toPromise(); break;
+        }
+
+        // Mover de pendientes a sincronizados
+        const elemento = this.datosPendientes.find(d => d.id === op.payload.id);
+        if (elemento) {
+          elemento.sincronizado = true;
+          this.datosSincronizados = [elemento, ...this.datosSincronizados];
+          this.datosPendientes    = this.datosPendientes.filter(d => d.id !== op.payload.id);
+        }
+
+        await this.offlineManager.removePendingOperation(op.id);
+        console.log(`✅ Sincronizada: ${op.type} ${op.endpoint}`);
+
+      } catch (error) {
+        await this.offlineManager.updateRetryCount(op.id, String(error));
+        console.error(`❌ Error sincronizando ${op.id}:`, error);
+      }
+    }
+
+    // Persistir listas actualizadas
+    await this.offlineManager.saveLocalData(this.STORAGE_KEY_PENDIENTES,    this.datosPendientes);
+    await this.offlineManager.saveLocalData(this.STORAGE_KEY_SINCRONIZADOS, this.datosSincronizados);
+
+    this.offlineManager.updateLastSyncTime();
+    this.offlineManager.setSyncing(false);
+
+    if (this.datosPendientes.length === 0) {
+      this.showToastMsg('✅ Todos los datos sincronizados', 'success');
+    }
+  }
+
+  // ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+  private showToastMsg(message: string, color: 'success' | 'warning' | 'danger'): void {
+    this.toastMessage = message;
+    this.toastColor   = color;
+    this.showToast    = true;
+    setTimeout(() => this.showToast = false, 4000);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('connection-restored', this.onConnectionRestored);
+    window.removeEventListener('manual-sync',         this.onManualSync);
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
