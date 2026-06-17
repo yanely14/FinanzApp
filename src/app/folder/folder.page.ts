@@ -7,11 +7,13 @@ import {
   IonButtons, IonMenuButton, IonButton, IonIcon,
   IonCard, IonCardContent, IonCardHeader, IonCardTitle,
   IonItem, IonLabel, IonInput, IonList,
-  IonSpinner, IonToast, IonNote
+  IonSpinner, IonToast, IonNote,
+  IonTabBar, IonTabButton
 } from '@ionic/angular/standalone';
 import { HttpClient } from '@angular/common/http';
 import { NetworkService } from '../services/network.service';
 import { OfflineManagerService, OfflineQueueStatus } from '../services/offline-manager.service';
+import { BluetoothService } from '../services/bluetooth.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
@@ -22,7 +24,16 @@ import {
   timeOutline,
   syncOutline,
   documentTextOutline,
-  addOutline
+  addOutline,
+  bluetoothOutline,
+  searchOutline,
+  chevronForwardOutline,
+  closeOutline,
+  homeOutline,
+  addCircleOutline,
+  barChartOutline,
+  flagOutline,
+  notificationsOutline
 } from 'ionicons/icons';
 
 export interface ElementoLocal {
@@ -46,7 +57,8 @@ export interface ElementoLocal {
     IonButtons, IonMenuButton, IonButton, IonIcon,
     IonCard, IonCardContent, IonCardHeader, IonCardTitle,
     IonItem, IonLabel, IonInput, IonList,
-    IonSpinner, IonToast, IonNote
+    IonSpinner, IonToast, IonNote,
+    IonTabBar, IonTabButton
   ]
 })
 export class FolderPage implements OnInit, OnDestroy {
@@ -65,6 +77,17 @@ export class FolderPage implements OnInit, OnDestroy {
   toastMessage: string = '';
   toastColor: 'success' | 'warning' | 'danger' = 'success';
 
+  // ── Variables de Bluetooth ─────────────────────────────────────────────
+  dispositivosBT: any[] = [];
+  escaneandoBT: boolean = false;
+  conectadoBT: boolean = false;
+  dispositivoActivoId: string = '';
+
+  // ── Variables del saludo / encabezado ────────────────────────────────────
+  saludo: string = 'Hola, Joel';
+  fechaTexto: string = '';
+  iniciales: string = 'J';
+
   private destroy$ = new Subject<void>();
   private readonly API_URL = 'https://api.tuservidor.com'; // 🔁 Cambia por tu API real
   private readonly STORAGE_KEY_PENDIENTES   = 'elementos_pendientes';
@@ -74,17 +97,31 @@ export class FolderPage implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private http: HttpClient,
     private networkService: NetworkService,
-    private offlineManager: OfflineManagerService
+    private offlineManager: OfflineManagerService,
+    private bluetoothService: BluetoothService
   ) {
     addIcons({
-      'wifi-outline':           wifiOutline,
-      'cloud-offline-outline':  cloudOfflineOutline,
-      'cloud-upload-outline':   cloudUploadOutline,
-      'time-outline':           timeOutline,
-      'sync-outline':           syncOutline,
+      'wifi-outline':            wifiOutline,
+      'cloud-offline-outline':   cloudOfflineOutline,
+      'cloud-upload-outline':    cloudUploadOutline,
+      'time-outline':            timeOutline,
+      'sync-outline':            syncOutline,
       'document-text-outline':  documentTextOutline,
-      'add-outline':            addOutline
+      'add-outline':             addOutline,
+      'bluetooth-outline':       bluetoothOutline,
+      'search-outline':          searchOutline,
+      'chevron-forward-outline': chevronForwardOutline,
+      'close-outline':           closeOutline,
+      'home-outline':            homeOutline,
+      'add-circle-outline':      addCircleOutline,
+      'bar-chart-outline':       barChartOutline,
+      'flag-outline':            flagOutline,
+      'notifications-outline':   notificationsOutline
     });
+
+    const ahora = new Date();
+    const texto = ahora.toLocaleDateString('es-DO', { month: 'long', year: 'numeric' });
+    this.fechaTexto = texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
   ngOnInit(): void {
@@ -107,12 +144,6 @@ export class FolderPage implements OnInit, OnDestroy {
           this.syncPendingOperations();
         }
       });
-
-    // Obtener tipo de red desde el servicio
-    // Si tu NetworkService expone networkType, úsalo así:
-    // this.networkService.getNetworkType()
-    //   .pipe(takeUntil(this.destroy$))
-    //   .subscribe((tipo: string) => this.tipoRed = tipo);
   }
 
   private watchOfflineQueue(): void {
@@ -157,10 +188,8 @@ export class FolderPage implements OnInit, OnDestroy {
     };
 
     if (this.isOnline) {
-      // 🟢 ONLINE: enviar al servidor
       await this.guardarOnline(elemento);
     } else {
-      // 🔴 OFFLINE: guardar localmente
       await this.guardarOffline(elemento);
     }
 
@@ -174,7 +203,6 @@ export class FolderPage implements OnInit, OnDestroy {
     try {
       await this.http.post(`${this.API_URL}/elementos`, elemento).toPromise();
 
-      // Marcar como sincronizado y mover a la lista correcta
       elemento.sincronizado = true;
       this.datosSincronizados = [elemento, ...this.datosSincronizados];
       await this.offlineManager.saveLocalData(
@@ -185,7 +213,6 @@ export class FolderPage implements OnInit, OnDestroy {
       this.showToastMsg('✅ Guardado en el servidor', 'success');
     } catch (error) {
       console.error('Error al enviar al servidor, guardando offline:', error);
-      // Si falla el servidor, guardar offline como respaldo
       await this.guardarOffline(elemento);
     }
   }
@@ -194,16 +221,13 @@ export class FolderPage implements OnInit, OnDestroy {
 
   private async guardarOffline(elemento: ElementoLocal): Promise<void> {
     try {
-      // Agregar a lista de pendientes en memoria
       this.datosPendientes = [elemento, ...this.datosPendientes];
 
-      // Persistir lista de pendientes en storage
       await this.offlineManager.saveLocalData(
         this.STORAGE_KEY_PENDIENTES,
         this.datosPendientes
       );
 
-      // Encolar operación para sincronizar después
       await this.offlineManager.addPendingOperation(
         'POST',
         '/elementos',
@@ -245,7 +269,6 @@ export class FolderPage implements OnInit, OnDestroy {
           case 'PATCH': await this.http.patch(url, op.payload).toPromise(); break;
         }
 
-        // Mover de pendientes a sincronizados
         const elemento = this.datosPendientes.find(d => d.id === op.payload.id);
         if (elemento) {
           elemento.sincronizado = true;
@@ -262,7 +285,6 @@ export class FolderPage implements OnInit, OnDestroy {
       }
     }
 
-    // Persistir listas actualizadas
     await this.offlineManager.saveLocalData(this.STORAGE_KEY_PENDIENTES,    this.datosPendientes);
     await this.offlineManager.saveLocalData(this.STORAGE_KEY_SINCRONIZADOS, this.datosSincronizados);
 
@@ -271,6 +293,43 @@ export class FolderPage implements OnInit, OnDestroy {
 
     if (this.datosPendientes.length === 0) {
       this.showToastMsg('✅ Todos los datos sincronizados', 'success');
+    }
+  }
+
+  // ─── MÉTODOS DE BLUETOOTH ──────────────────────────────────────────────
+
+  async escanearBT(): Promise<void> {
+    this.escaneandoBT = true;
+    this.dispositivosBT = [];
+
+    this.bluetoothService.getDispositivos()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(dispositivos => {
+        this.dispositivosBT = dispositivos;
+      });
+
+    await this.bluetoothService.escanearDispositivos();
+
+    setTimeout(() => {
+      this.escaneandoBT = false;
+    }, 5000);
+  }
+
+  async conectarBT(deviceId: string): Promise<void> {
+    await this.bluetoothService.conectarDispositivo(deviceId);
+    this.dispositivoActivoId = deviceId;
+
+    this.bluetoothService.getEstadoConexion()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(estado => {
+        this.conectadoBT = estado;
+      });
+  }
+
+  async desconectarBT(): Promise<void> {
+    if (this.dispositivoActivoId) {
+      await this.bluetoothService.desconectar(this.dispositivoActivoId);
+      this.dispositivoActivoId = '';
     }
   }
 

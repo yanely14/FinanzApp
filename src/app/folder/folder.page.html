@@ -4,7 +4,7 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
 
-    <ion-title>💰 FinanzApp</ion-title>
+    <ion-title>FinanzApp</ion-title>
 
     <ion-buttons slot="end">
       <div class="estado-header">
@@ -19,7 +19,16 @@
 </ion-header>
 
 <ion-content [fullscreen]="true"
-  style="--padding-start:16px; --padding-end:16px; --padding-top:20px; --padding-bottom:20px;">
+  style="--padding-start:16px; --padding-end:16px; --padding-top:16px; --padding-bottom:24px;">
+
+  <!-- SALUDO -->
+  <div class="saludo-banner">
+    <div class="saludo-texto">
+      <span class="hola">{{ saludo }}</span>
+      <span class="fecha">{{ fechaTexto }}</span>
+    </div>
+    <div class="avatar">{{ iniciales }}</div>
+  </div>
 
   <!-- ESTADO DE RED -->
   <ion-card class="card-estado">
@@ -42,7 +51,7 @@
 
       <div class="fila-estado">
         <span class="label">Tipo de red</span>
-        <span class="valor azul">{{ tipoRed }}</span>
+        <span class="valor morado">{{ tipoRed }}</span>
       </div>
 
       <div class="fila-estado">
@@ -67,6 +76,88 @@
     Sin conexión. Los datos se guardarán localmente hasta recuperar señal.
   </div>
 
+  <!-- SECCIÓN BLUETOOTH -->
+  <ion-card class="card-bluetooth">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="bluetooth-outline"></ion-icon>
+        CONECTIVIDAD BLUETOOTH
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+
+      <!-- Panel de dispositivo conectado -->
+      <div class="panel-conectado" *ngIf="conectadoBT">
+        <div class="icono-conectado">
+          <ion-icon name="bluetooth-outline"></ion-icon>
+          <span class="pulso"></span>
+        </div>
+        <div class="info-conectado">
+          <h4>Dispositivo conectado</h4>
+          <p>Conexión activa y estable</p>
+        </div>
+      </div>
+
+      <!-- Estado simple cuando no hay conexión -->
+      <div class="fila-estado" *ngIf="!conectadoBT">
+        <span class="label">Estado</span>
+        <span class="valor offline">Sin conexión</span>
+      </div>
+
+      <!-- Botón de escaneo -->
+      <ion-button expand="block"
+                  [disabled]="escaneandoBT"
+                  (click)="escanearBT()"
+                  class="btn-escanear">
+        <ion-icon [name]="escaneandoBT ? 'sync-outline' : 'search-outline'"
+                  slot="start"
+                  [class.girando]="escaneandoBT"></ion-icon>
+        {{ escaneandoBT ? 'Escaneando...' : 'Buscar dispositivos' }}
+      </ion-button>
+
+      <!-- Lista de dispositivos encontrados -->
+      <div class="lista-dispositivos" *ngIf="dispositivosBT.length > 0">
+        <div *ngFor="let dispositivo of dispositivosBT"
+             class="card-dispositivo"
+             (click)="conectarBT(dispositivo.deviceId)">
+          <div class="avatar-bt">
+            <ion-icon name="bluetooth-outline"></ion-icon>
+          </div>
+          <div class="info-dispositivo">
+            <h4>{{ dispositivo.nombre }}</h4>
+            <div class="barras-senal">
+              <span class="barra" [class.activa]="dispositivo.rssi > -90"></span>
+              <span class="barra" [class.activa]="dispositivo.rssi > -75"></span>
+              <span class="barra" [class.activa]="dispositivo.rssi > -60"></span>
+              <span class="barra" [class.activa]="dispositivo.rssi > -45"></span>
+            </div>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="flecha"></ion-icon>
+        </div>
+      </div>
+
+      <!-- Botón de desconexión -->
+      <ion-button expand="block"
+                  fill="outline"
+                  color="danger"
+                  *ngIf="conectadoBT"
+                  (click)="desconectarBT()"
+                  class="btn-desconectar">
+        <ion-icon name="close-outline" slot="start"></ion-icon>
+        Desconectar
+      </ion-button>
+
+      <!-- Estado vacío -->
+      <div class="estado-vacio-bt"
+           *ngIf="dispositivosBT.length === 0 && !escaneandoBT">
+        <ion-icon name="bluetooth-outline"></ion-icon>
+        <p>No se encontraron dispositivos</p>
+        <span>Presiona "Buscar dispositivos" para iniciar</span>
+      </div>
+
+    </ion-card-content>
+  </ion-card>
+
   <!-- PENDIENTES -->
   <ion-card class="card-datos" *ngIf="datosPendientes.length > 0">
     <ion-card-header>
@@ -77,8 +168,10 @@
     </ion-card-header>
     <ion-card-content>
       <ion-list lines="none">
-        <ion-item *ngFor="let item of datosPendientes" class="item-dato pendiente">
-          <ion-icon name="cloud-offline-outline" slot="start" class="icono-pendiente"></ion-icon>
+        <ion-item *ngFor="let item of datosPendientes" class="item-dato">
+          <div class="circulo-icono pendiente" slot="start">
+            <ion-icon name="cloud-offline-outline"></ion-icon>
+          </div>
           <ion-label>
             <h3>{{ item.titulo }}</h3>
             <p>Guardado a las {{ item.hora }}</p>
@@ -99,7 +192,9 @@
     <ion-card-content>
       <ion-list lines="none">
         <ion-item *ngFor="let item of datosSincronizados" class="item-dato">
-          <ion-icon name="document-text-outline" slot="start" class="icono-sync"></ion-icon>
+          <div class="circulo-icono sincronizado" slot="start">
+            <ion-icon name="document-text-outline"></ion-icon>
+          </div>
           <ion-label>
             <h3>{{ item.titulo }}</h3>
             <p>Sincronizado a las {{ item.hora }}</p>
@@ -126,10 +221,10 @@
       (keyup.enter)="agregarElemento()">
     </ion-input>
     <ion-button
-      color="primary"
       shape="round"
       [disabled]="isSaving"
-      (click)="agregarElemento()">
+      (click)="agregarElemento()"
+      class="btn-add">
       <ion-icon name="add-outline"></ion-icon>
     </ion-button>
   </div>
@@ -144,3 +239,27 @@
   </ion-toast>
 
 </ion-content>
+
+<!-- BARRA DE NAVEGACIÓN INFERIOR -->
+<ion-tab-bar class="bottom-nav">
+  <ion-tab-button class="tab-btn active">
+    <ion-icon name="home-outline"></ion-icon>
+    <span>Inicio</span>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn">
+    <ion-icon name="add-circle-outline"></ion-icon>
+    <span>Agregar</span>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn">
+    <ion-icon name="bar-chart-outline"></ion-icon>
+    <span>Gráficas</span>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn">
+    <ion-icon name="flag-outline"></ion-icon>
+    <span>Metas</span>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn">
+    <ion-icon name="notifications-outline"></ion-icon>
+    <span>Alertas</span>
+  </ion-tab-button>
+</ion-tab-bar>
