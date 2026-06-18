@@ -63,7 +63,7 @@ export interface ElementoLocal {
 })
 export class FolderPage implements OnInit, OnDestroy {
 
-  // ── Variables del template original ──────────────────────────────────────────
+  // Variables del template original 
   isOnline: boolean = true;
   tipoRed: string = 'Desconocida';
   datosPendientes: ElementoLocal[] = [];
@@ -71,25 +71,25 @@ export class FolderPage implements OnInit, OnDestroy {
   ultimaSync: string = '';
   nuevoElemento: string = '';
 
-  // ── Variables de estado interno ───────────────────────────────────────────────
+  // Variables de estado interno 
   isSaving: boolean = false;
   showToast: boolean = false;
   toastMessage: string = '';
   toastColor: 'success' | 'warning' | 'danger' = 'success';
 
-  // ── Variables de Bluetooth ─────────────────────────────────────────────
+  // Variables de Bluetooth 
   dispositivosBT: any[] = [];
   escaneandoBT: boolean = false;
   conectadoBT: boolean = false;
   dispositivoActivoId: string = '';
 
-  // ── Variables del saludo / encabezado ────────────────────────────────────
+  // Variables del saludo / encabezado 
   saludo: string = 'Hola, Joel';
   fechaTexto: string = '';
   iniciales: string = 'J';
 
   private destroy$ = new Subject<void>();
-  private readonly API_URL = 'https://api.tuservidor.com'; // 🔁 Cambia por tu API real
+  private readonly API_URL = 'https://api.tuservidor.com'; 
   private readonly STORAGE_KEY_PENDIENTES   = 'elementos_pendientes';
   private readonly STORAGE_KEY_SINCRONIZADOS = 'elementos_sincronizados';
 
@@ -133,7 +133,7 @@ export class FolderPage implements OnInit, OnDestroy {
     window.addEventListener('manual-sync',         this.onManualSync);
   }
 
-  // ─── MONITOREAR RED ───────────────────────────────────────────────────────────
+  // MONITOREAR RED 
 
   private watchNetworkStatus(): void {
     this.networkService.getNetworkStatus()
@@ -161,7 +161,7 @@ export class FolderPage implements OnInit, OnDestroy {
       });
   }
 
-  // ─── CARGAR DATOS LOCALES ─────────────────────────────────────────────────────
+  // CARGAR DATOS LOCALES
 
   private async cargarDatosLocales(): Promise<void> {
     const pendientes    = await this.offlineManager.getLocalData(this.STORAGE_KEY_PENDIENTES);
@@ -171,7 +171,7 @@ export class FolderPage implements OnInit, OnDestroy {
     this.datosSincronizados = sincronizados ?? [];
   }
 
-  // ─── AGREGAR ELEMENTO — LÓGICA CONDICIONAL CENTRAL ───────────────────────────
+  // AGREGAR ELEMENTO — LÓGICA CONDICIONAL CENTRAL 
 
   async agregarElemento(): Promise<void> {
     if (!this.nuevoElemento.trim()) return;
@@ -197,7 +197,7 @@ export class FolderPage implements OnInit, OnDestroy {
     this.isSaving = false;
   }
 
-  // ─── CASO ONLINE ─────────────────────────────────────────────────────────────
+  // CASO ONLINE
 
   private async guardarOnline(elemento: ElementoLocal): Promise<void> {
     try {
@@ -217,7 +217,7 @@ export class FolderPage implements OnInit, OnDestroy {
     }
   }
 
-  // ─── CASO OFFLINE ────────────────────────────────────────────────────────────
+  // CASO OFFLINE 
 
   private async guardarOffline(elemento: ElementoLocal): Promise<void> {
     try {
@@ -244,7 +244,7 @@ export class FolderPage implements OnInit, OnDestroy {
     }
   }
 
-  // ─── SINCRONIZACIÓN AUTOMÁTICA ────────────────────────────────────────────────
+  // SINCRONIZACIÓN AUTOMÁTICA 
 
   private onConnectionRestored = (): void => { this.syncPendingOperations(); };
   private onManualSync         = (): void => { this.syncPendingOperations(); };
@@ -296,7 +296,7 @@ export class FolderPage implements OnInit, OnDestroy {
     }
   }
 
-  // ─── MÉTODOS DE BLUETOOTH ──────────────────────────────────────────────
+  // MÉTODOS DE BLUETOOTH 
 
   async escanearBT(): Promise<void> {
     this.escaneandoBT = true;
@@ -333,7 +333,7 @@ export class FolderPage implements OnInit, OnDestroy {
     }
   }
 
-  // ─── HELPERS ─────────────────────────────────────────────────────────────────
+  // HELPERS 
 
   private showToastMsg(message: string, color: 'success' | 'warning' | 'danger'): void {
     this.toastMessage = message;
