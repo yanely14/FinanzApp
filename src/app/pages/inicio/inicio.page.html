@@ -1,0 +1,133 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>FinanzApp</ion-title>
+    <ion-buttons slot="end">
+      <div class="estado-header">
+        <span class="punto-estado" [class.online]="finanzas.isOnline" [class.offline]="!finanzas.isOnline"></span>
+        <span>{{ finanzas.isOnline ? 'Online' : 'Offline' }}</span>
+      </div>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true"
+  style="--padding-start:16px; --padding-end:16px; --padding-top:16px; --padding-bottom:24px;">
+
+  <!-- GESTO: DESLIZAR HACIA ABAJO PARA REFRESCAR -->
+  <ion-refresher slot="fixed" (ionRefresh)="refrescar($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="saludo-banner">
+    <div class="saludo-texto">
+      <span class="hola">{{ finanzas.saludo }}</span>
+      <span class="fecha">{{ finanzas.fechaTexto }}</span>
+    </div>
+    <div class="avatar">{{ finanzas.iniciales }}</div>
+  </div>
+
+  <div class="tarjeta-tasa-dolar">
+    <span class="icono-dolar">💵</span>
+    <div class="info-tasa">
+      <p class="label-tasa">Tasa del dólar hoy</p>
+      <h4 *ngIf="!finanzas.cargandoTasa">RD$ {{ finanzas.tasaDolar | number:'1.2-2' }}</h4>
+      <h4 *ngIf="finanzas.cargandoTasa">Cargando...</h4>
+    </div>
+  </div>
+
+  <ion-card class="balance-card">
+    <ion-card-content>
+      <p class="label-balance">Balance disponible</p>
+      <h1 class="monto-balance">RD$ {{ finanzas.balance | number }}</h1>
+      <p class="fecha-balance">Actualizado hoy</p>
+
+      <div class="resumen-ingresos-gastos">
+        <div class="chip-resumen chip-ingreso">
+          <p>Ingresos</p>
+          <h3>RD$ {{ finanzas.totalIngresos | number }}</h3>
+        </div>
+        <div class="chip-resumen chip-gasto">
+          <p>Gastos</p>
+          <h3>RD$ {{ finanzas.totalGastos | number }}</h3>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- GESTO: DESLIZAR UN MOVIMIENTO PARA BORRARLO -->
+  <h3 class="titulo-movimientos">Últimos movimientos</h3>
+  <p class="pista-swipe" *ngIf="finanzas.movimientos.length > 0">⬅️ Desliza un movimiento para borrarlo</p>
+
+  <ion-list lines="none">
+    <ion-item-sliding *ngFor="let mov of finanzas.movimientos; let i = index">
+      <ion-item class="item-movimiento">
+        <div class="icono-movimiento" slot="start">{{ mov.emoji }}</div>
+        <ion-label>
+          <h4>{{ mov.titulo }}</h4>
+          <p>{{ mov.categoria }}</p>
+        </ion-label>
+        <div slot="end" [ngClass]="mov.tipo === 'ingreso' ? 'monto-positivo' : 'monto-negativo'">
+          {{ mov.tipo === 'ingreso' ? '+' : '-' }}RD${{ mov.monto | number }}
+        </div>
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option color="danger" (click)="borrarMovimiento(i)">
+          <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  </ion-list>
+
+  <div class="banner-offline" *ngIf="!finanzas.isOnline">
+    <ion-icon name="cloud-offline-outline"></ion-icon>
+    Sin conexión. Los gastos se guardarán localmente hasta recuperar señal.
+  </div>
+
+  <ion-card class="card-datos" *ngIf="finanzas.datosPendientes.length > 0">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="time-outline"></ion-icon>
+        PENDIENTES DE SINCRONIZAR
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list lines="none">
+        <ion-item *ngFor="let item of finanzas.datosPendientes" class="item-dato">
+          <div class="circulo-icono pendiente" slot="start">
+            <ion-icon name="cloud-offline-outline"></ion-icon>
+          </div>
+          <ion-label>
+            <h3>{{ item.titulo }}</h3>
+            <p>Guardado a las {{ item.hora }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card class="card-datos" *ngIf="finanzas.datosSincronizados.length > 0">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="cloud-upload-outline"></ion-icon>
+        GASTOS SINCRONIZADOS
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list lines="none">
+        <ion-item *ngFor="let item of finanzas.datosSincronizados" class="item-dato">
+          <div class="circulo-icono sincronizado" slot="start">
+            <ion-icon name="document-text-outline"></ion-icon>
+          </div>
+          <ion-label>
+            <h3>{{ item.titulo }}</h3>
+            <p>Sincronizado a las {{ item.hora }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>

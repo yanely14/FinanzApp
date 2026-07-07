@@ -1,0 +1,45 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Metas de ahorro</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+<div class="vista-metas">
+
+  <div class="tarjeta-meta" *ngFor="let meta of finanzas.metasAhorro">
+    <div class="fila-meta-superior">
+      <div class="icono-meta">{{ meta.emoji }}</div>
+      <div class="info-meta">
+        <h4>{{ meta.nombre }}</h4>
+        <p>Fecha límite: {{ meta.fechaLimite }}</p>
+      </div>
+      <span class="porcentaje-meta">{{ finanzas.porcentajeMeta(meta) }}%</span>
+    </div>
+
+    <div class="barra-fondo-meta">
+      <div class="barra-relleno-meta" [style.width.%]="finanzas.porcentajeMeta(meta)"></div>
+    </div>
+
+    <div class="fila-meta-inferior">
+      <div>
+        <p class="label-meta">Ahorrado:</p>
+        <p class="valor-meta">RD$ {{ meta.ahorrado | number }}</p>
+      </div>
+      <div class="alinear-derecha">
+        <p class="label-meta">Meta:</p>
+        <p class="valor-meta">RD$ {{ meta.meta | number }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tarjeta-sugerencia">
+    <p><strong>Sugerencia</strong></p>
+    <p>Si ahorras RD$5,000 más este mes, alcanzarás tu meta del carro 3 semanas antes.</p>
+  </div>
+
+</div>
+</ion-content>

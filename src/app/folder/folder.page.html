@@ -20,6 +20,45 @@
 
 <ion-content [fullscreen]="true"
   style="--padding-start:16px; --padding-end:16px; --padding-top:16px; --padding-bottom:24px;">
+  <!-- NUEVO: PANTALLA DE BIENVENIDA / REGISTRO -->
+  <div *ngIf="vistaActiva === 'bienvenida'" class="vista-bienvenida">
+
+    <div class="contenido-bienvenida">
+
+      <!-- Si el usuario YA está registrado -->
+      <div *ngIf="usuarioRegistrado">
+        <h1 class="titulo-bienvenida">👋 Bienvenido, {{ nombreUsuarioGuardado }}</h1>
+        <ion-button expand="block" class="btn-bienvenida" (click)="entrarApp()">
+          Entrar
+        </ion-button>
+      </div>
+
+      <!-- Si el usuario NO está registrado todavía -->
+      <div *ngIf="!usuarioRegistrado">
+        <h1 class="titulo-bienvenida">👋 Bienvenido a FinanzApp</h1>
+        <p class="subtitulo-bienvenida">Antes de comenzar, cuéntanos un poco sobre ti.</p>
+
+        <ion-item lines="none" class="input-bienvenida">
+          <ion-label position="stacked">Nombre</ion-label>
+          <ion-input [(ngModel)]="nombreInput" placeholder="Ej: Joel"></ion-input>
+        </ion-item>
+
+        <ion-item lines="none" class="input-bienvenida">
+          <ion-label position="stacked">Edad</ion-label>
+          <ion-input type="number" [(ngModel)]="edadInput" placeholder="Ej: 25"></ion-input>
+        </ion-item>
+
+        <p class="error-registro" *ngIf="errorRegistro">{{ errorRegistro }}</p>
+
+        <ion-button expand="block" class="btn-bienvenida" (click)="guardarUsuario()">
+          Comenzar
+        </ion-button>
+      </div>
+
+    </div>
+
+  </div>
+  <div *ngIf="vistaActiva === 'inicio'">
 
   <!-- SALUDO -->
   <div class="saludo-banner">
@@ -30,133 +69,56 @@
     <div class="avatar">{{ iniciales }}</div>
   </div>
 
-  <!-- ESTADO DE RED -->
-  <ion-card class="card-estado">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="wifi-outline"></ion-icon>
-        ESTADO DE CONECTIVIDAD
-      </ion-card-title>
-    </ion-card-header>
+  <!-- NUEVO: TASA DEL DÓLAR (API) -->
+  <div class="tarjeta-tasa-dolar">
+    <span class="icono-dolar">💵</span>
+    <div class="info-tasa">
+      <p class="label-tasa">Tasa del dólar hoy</p>
+      <h4 *ngIf="!cargandoTasa">RD$ {{ tasaDolar | number:'1.2-2' }}</h4>
+      <h4 *ngIf="cargandoTasa">Cargando...</h4>
+    </div>
+  </div>
+
+  <!-- NUEVO: BALANCE FINANCIERO -->
+  <ion-card class="balance-card">
     <ion-card-content>
+      <p class="label-balance">Balance disponible</p>
+      <h1 class="monto-balance">RD$ {{ balance | number }}</h1>
+      <p class="fecha-balance">Actualizado hoy</p>
 
-      <div class="fila-estado">
-        <span class="label">Estado actual</span>
-        <span class="valor"
-              [class.online]="isOnline"
-              [class.offline]="!isOnline">
-          {{ isOnline ? 'En línea' : 'Sin conexión' }}
-        </span>
+      <div class="resumen-ingresos-gastos">
+        <div class="chip-resumen chip-ingreso">
+          <p>Ingresos</p>
+          <h3>RD$ {{ totalIngresos | number }}</h3>
+        </div>
+        <div class="chip-resumen chip-gasto">
+          <p>Gastos</p>
+          <h3>RD$ {{ totalGastos | number }}</h3>
+        </div>
       </div>
-
-      <div class="fila-estado">
-        <span class="label">Tipo de red</span>
-        <span class="valor morado">{{ tipoRed }}</span>
-      </div>
-
-      <div class="fila-estado">
-        <span class="label">Cambios pendientes</span>
-        <span class="valor"
-              [class.alerta]="datosPendientes.length > 0">
-          {{ datosPendientes.length }}
-        </span>
-      </div>
-
-      <div class="ultima-sync" *ngIf="ultimaSync">
-        <ion-icon name="time-outline"></ion-icon>
-        Última sincronización: {{ ultimaSync }}
-      </div>
-
     </ion-card-content>
   </ion-card>
+
+  <!-- NUEVO: ÚLTIMOS MOVIMIENTOS -->
+  <h3 class="titulo-movimientos">Últimos movimientos</h3>
+  <ion-list lines="none">
+    <ion-item *ngFor="let mov of movimientos" class="item-movimiento">
+      <div class="icono-movimiento" slot="start">{{ mov.emoji }}</div>
+      <ion-label>
+        <h4>{{ mov.titulo }}</h4>
+        <p>{{ mov.categoria }}</p>
+      </ion-label>
+      <div slot="end" [ngClass]="mov.tipo === 'ingreso' ? 'monto-positivo' : 'monto-negativo'">
+        {{ mov.tipo === 'ingreso' ? '+' : '-' }}RD${{ mov.monto | number }}
+      </div>
+    </ion-item>
+  </ion-list>
 
   <!-- BANNER OFFLINE -->
   <div class="banner-offline" *ngIf="!isOnline">
     <ion-icon name="cloud-offline-outline"></ion-icon>
     Sin conexión. Los datos se guardarán localmente hasta recuperar señal.
   </div>
-
-  <!-- SECCIÓN BLUETOOTH -->
-  <ion-card class="card-bluetooth">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="bluetooth-outline"></ion-icon>
-        CONECTIVIDAD BLUETOOTH
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-
-      <!-- Panel de dispositivo conectado -->
-      <div class="panel-conectado" *ngIf="conectadoBT">
-        <div class="icono-conectado">
-          <ion-icon name="bluetooth-outline"></ion-icon>
-          <span class="pulso"></span>
-        </div>
-        <div class="info-conectado">
-          <h4>Dispositivo conectado</h4>
-          <p>Conexión activa y estable</p>
-        </div>
-      </div>
-
-      <!-- Estado simple cuando no hay conexión -->
-      <div class="fila-estado" *ngIf="!conectadoBT">
-        <span class="label">Estado</span>
-        <span class="valor offline">Sin conexión</span>
-      </div>
-
-      <!-- Botón de escaneo -->
-      <ion-button expand="block"
-                  [disabled]="escaneandoBT"
-                  (click)="escanearBT()"
-                  class="btn-escanear">
-        <ion-icon [name]="escaneandoBT ? 'sync-outline' : 'search-outline'"
-                  slot="start"
-                  [class.girando]="escaneandoBT"></ion-icon>
-        {{ escaneandoBT ? 'Escaneando...' : 'Buscar dispositivos' }}
-      </ion-button>
-
-      <!-- Lista de dispositivos encontrados -->
-      <div class="lista-dispositivos" *ngIf="dispositivosBT.length > 0">
-        <div *ngFor="let dispositivo of dispositivosBT"
-             class="card-dispositivo"
-             (click)="conectarBT(dispositivo.deviceId)">
-          <div class="avatar-bt">
-            <ion-icon name="bluetooth-outline"></ion-icon>
-          </div>
-          <div class="info-dispositivo">
-            <h4>{{ dispositivo.nombre }}</h4>
-            <div class="barras-senal">
-              <span class="barra" [class.activa]="dispositivo.rssi > -90"></span>
-              <span class="barra" [class.activa]="dispositivo.rssi > -75"></span>
-              <span class="barra" [class.activa]="dispositivo.rssi > -60"></span>
-              <span class="barra" [class.activa]="dispositivo.rssi > -45"></span>
-            </div>
-          </div>
-          <ion-icon name="chevron-forward-outline" class="flecha"></ion-icon>
-        </div>
-      </div>
-
-      <!-- Botón de desconexión -->
-      <ion-button expand="block"
-                  fill="outline"
-                  color="danger"
-                  *ngIf="conectadoBT"
-                  (click)="desconectarBT()"
-                  class="btn-desconectar">
-        <ion-icon name="close-outline" slot="start"></ion-icon>
-        Desconectar
-      </ion-button>
-
-      <!-- Estado vacío -->
-      <div class="estado-vacio-bt"
-           *ngIf="dispositivosBT.length === 0 && !escaneandoBT">
-        <ion-icon name="bluetooth-outline"></ion-icon>
-        <p>No se encontraron dispositivos</p>
-        <span>Presiona "Buscar dispositivos" para iniciar</span>
-      </div>
-
-    </ion-card-content>
-  </ion-card>
 
   <!-- PENDIENTES -->
   <ion-card class="card-datos" *ngIf="datosPendientes.length > 0">
@@ -229,6 +191,247 @@
     </ion-button>
   </div>
 
+  </div>
+
+  <!-- NUEVO: PANTALLA DE AGREGAR GASTO -->
+  <div *ngIf="vistaActiva === 'agregar'" class="vista-agregar">
+
+    <h2 class="titulo-agregar">Registrar gasto</h2>
+
+    <div class="monto-grande">
+      RD$ {{ montoGasto || '0.00' }}
+    </div>
+    <ion-input
+      type="number"
+      [(ngModel)]="montoGasto"
+      placeholder="Toca para ingresar el monto"
+      class="input-monto">
+    </ion-input>
+
+    <h4 class="subtitulo-agregar">Categoría</h4>
+    <div class="grid-categorias">
+      <div *ngFor="let cat of categorias"
+           class="chip-categoria"
+           [class.activa]="categoriaSeleccionada === cat.nombre"
+           (click)="seleccionarCategoria(cat.nombre)">
+        <span class="emoji-categoria">{{ cat.emoji }}</span>
+        <span>{{ cat.nombre }}</span>
+      </div>
+    </div>
+
+    <h4 class="subtitulo-agregar">Descripción</h4>
+    <ion-input
+      [(ngModel)]="descripcionGasto"
+      placeholder="Ej: almuerzo en el trabajo"
+      class="input-descripcion">
+    </ion-input>
+
+    <h4 class="subtitulo-agregar">Recibo (opcional)</h4>
+
+    <div class="zona-foto" *ngIf="!fotoRecibo" (click)="tomarFotoRecibo()">
+      <ion-icon name="camera-outline"></ion-icon>
+      <p>Toca para tomar foto del recibo</p>
+    </div>
+
+    <div class="vista-foto" *ngIf="fotoRecibo">
+      <img [src]="fotoRecibo" alt="Foto del recibo" />
+      <ion-button fill="clear" color="danger" size="small" (click)="quitarFotoRecibo()">
+        <ion-icon name="trash-outline" slot="start"></ion-icon>
+        Quitar foto
+      </ion-button>
+    </div>
+
+    <h4 class="subtitulo-agregar">Ubicación (opcional)</h4>
+
+    <div class="zona-ubicacion" *ngIf="!ubicacionGasto" (click)="obtenerUbicacion()">
+      <ion-icon name="location-outline" *ngIf="!obteniendoUbicacion"></ion-icon>
+      <ion-spinner name="crescent" *ngIf="obteniendoUbicacion"></ion-spinner>
+      <p>{{ obteniendoUbicacion ? 'Buscando ubicación...' : 'Toca para usar mi ubicación' }}</p>
+    </div>
+
+    <p class="error-ubicacion" *ngIf="errorUbicacion">{{ errorUbicacion }}</p>
+
+    <div class="vista-mapa" *ngIf="ubicacionGasto">
+      <iframe
+        [src]="urlMapa"
+        width="100%"
+        height="160"
+        style="border:0; border-radius: 12px;"
+        loading="lazy">
+      </iframe>
+      <ion-button fill="clear" color="danger" size="small" (click)="quitarUbicacion()">
+        <ion-icon name="trash-outline" slot="start"></ion-icon>
+        Quitar ubicación
+      </ion-button>
+    </div>
+
+    <h4 class="subtitulo-agregar">Fecha</h4>
+    <ion-item class="input-fecha" lines="none">
+      <ion-icon name="calendar-outline" slot="start"></ion-icon>
+      <ion-datetime-button datetime="fechaPicker"></ion-datetime-button>
+    </ion-item>
+
+    <ion-modal [keepContentsMounted]="true">
+      <ng-template>
+        <ion-datetime
+          id="fechaPicker"
+          presentation="date"
+          [(ngModel)]="fechaGasto"
+          locale="es-DO">
+        </ion-datetime>
+      </ng-template>
+    </ion-modal>
+
+    <ion-button expand="block" class="btn-guardar-gasto" (click)="guardarGasto()">
+      Guardar gasto
+    </ion-button>
+
+  </div>
+
+  <!-- NUEVO: PANTALLA DE GRÁFICAS -->
+  <div *ngIf="vistaActiva === 'graficas'" class="vista-graficas">
+
+    <h2 class="titulo-graficas">Gráficas</h2>
+
+    <div class="tarjetas-resumen-graficas">
+      <div class="mini-tarjeta">
+        <p>Ingresos</p>
+        <h3 class="verde">RD$ {{ totalIngresos | number }}</h3>
+      </div>
+      <div class="mini-tarjeta">
+        <p>Gastos</p>
+        <h3 class="roja">RD$ {{ totalGastos | number }}</h3>
+      </div>
+    </div>
+
+    <h4 class="subtitulo-agregar">Ingresos vs Gastos (últimos 4 meses)</h4>
+
+    <div class="grafica-barras">
+      <div class="grupo-barra" *ngFor="let dato of datosMensuales">
+        <div class="barras">
+          <div class="barra ingreso"
+               [style.height.%]="(dato.ingresos / maxValorGrafica) * 100">
+          </div>
+          <div class="barra gasto"
+               [style.height.%]="(dato.gastos / maxValorGrafica) * 100">
+          </div>
+        </div>
+        <span class="etiqueta-mes">{{ dato.mes }}</span>
+      </div>
+    </div>
+
+    <div class="leyenda-grafica">
+      <span class="punto-leyenda ingreso"></span> Ingresos
+      <span class="punto-leyenda gasto"></span> Gastos
+    </div>
+
+    <h4 class="subtitulo-agregar">Gastos por categoría</h4>
+
+    <div class="lista-categorias-grafica">
+      <div class="fila-categoria-grafica" *ngFor="let cat of gastosPorCategoria">
+        <span class="nombre-categoria">{{ cat.nombre }}</span>
+        <div class="barra-fondo">
+          <div class="barra-relleno"
+               [style.width.%]="(cat.monto / maxGastoCategoria) * 100">
+          </div>
+        </div>
+        <span class="monto-categoria">RD$ {{ cat.monto | number }}</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- NUEVO: PANTALLA DE METAS -->
+  <div *ngIf="vistaActiva === 'metas'" class="vista-metas">
+
+    <div class="header-metas">
+      <h2 class="titulo-metas">Metas de ahorro</h2>
+      <ion-icon name="add-circle-outline" class="icono-agregar-meta"></ion-icon>
+    </div>
+
+    <div class="tarjeta-meta" *ngFor="let meta of metasAhorro">
+      <div class="fila-meta-superior">
+        <div class="icono-meta">{{ meta.emoji }}</div>
+        <div class="info-meta">
+          <h4>{{ meta.nombre }}</h4>
+          <p>Fecha límite: {{ meta.fechaLimite }}</p>
+        </div>
+        <span class="porcentaje-meta">{{ porcentajeMeta(meta) }}%</span>
+      </div>
+
+      <div class="barra-fondo-meta">
+        <div class="barra-relleno-meta" [style.width.%]="porcentajeMeta(meta)"></div>
+      </div>
+
+      <div class="fila-meta-inferior">
+        <div>
+          <p class="label-meta">Ahorrado:</p>
+          <p class="valor-meta">RD$ {{ meta.ahorrado | number }}</p>
+        </div>
+        <div class="alinear-derecha">
+          <p class="label-meta">Meta:</p>
+          <p class="valor-meta">RD$ {{ meta.meta | number }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tarjeta-sugerencia">
+      <p><strong>Sugerencia</strong></p>
+      <p>Si ahorras RD$5,000 más este mes, alcanzarás tu meta del carro 3 semanas antes.</p>
+    </div>
+
+  </div>
+
+  <!-- NUEVO: PANTALLA DE ALERTAS -->
+  <div *ngIf="vistaActiva === 'alertas'" class="vista-alertas">
+
+    <div class="header-alertas">
+      <h2 class="titulo-alertas">Alertas</h2>
+      <span class="badge-nuevas">{{ alertasHoy.length }} nuevas</span>
+    </div>
+
+    <div class="tarjeta-tip-audio">
+      <div class="icono-tip" (click)="toggleTipAudio()">
+        <ion-icon [name]="reproduciendoTip ? 'pause-outline' : 'play-outline'"></ion-icon>
+      </div>
+      <div class="info-tip">
+        <p class="label-tip">🎧 Tip financiero del día</p>
+        <p class="texto-tip">Escucha un consejo rápido para ahorrar mejor este mes</p>
+      </div>
+    </div>
+
+    <audio
+      id="audioTip"
+      (ended)="audioTerminado()"
+      src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
+    </audio>
+
+    <h4 class="subtitulo-alertas">Hoy</h4>
+    <div class="tarjeta-alerta" *ngFor="let alerta of alertasHoy">
+      <span class="punto-alerta" [ngClass]="alerta.tipo"></span>
+      <div class="contenido-alerta">
+        <div class="fila-titulo-alerta">
+          <h4>{{ alerta.titulo }}</h4>
+          <span class="hora-alerta">{{ alerta.hora }}</span>
+        </div>
+        <p>{{ alerta.descripcion }}</p>
+      </div>
+    </div>
+
+    <h4 class="subtitulo-alertas">Ayer</h4>
+    <div class="tarjeta-alerta" *ngFor="let alerta of alertasAyer">
+      <span class="punto-alerta" [ngClass]="alerta.tipo"></span>
+      <div class="contenido-alerta">
+        <div class="fila-titulo-alerta">
+          <h4>{{ alerta.titulo }}</h4>
+          <span class="hora-alerta">{{ alerta.hora }}</span>
+        </div>
+        <p>{{ alerta.descripcion }}</p>
+      </div>
+    </div>
+
+  </div>
+
   <!-- TOAST -->
   <ion-toast
     [isOpen]="showToast"
@@ -241,24 +444,24 @@
 </ion-content>
 
 <!-- BARRA DE NAVEGACIÓN INFERIOR -->
-<ion-tab-bar class="bottom-nav">
-  <ion-tab-button class="tab-btn active">
+<ion-tab-bar class="bottom-nav" *ngIf="vistaActiva !== 'bienvenida'">
+  <ion-tab-button class="tab-btn" [class.active]="vistaActiva === 'inicio'" (click)="cambiarVista('inicio')">
     <ion-icon name="home-outline"></ion-icon>
     <span>Inicio</span>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn">
+  <ion-tab-button class="tab-btn" [class.active]="vistaActiva === 'agregar'" (click)="cambiarVista('agregar')">
     <ion-icon name="add-circle-outline"></ion-icon>
     <span>Agregar</span>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn">
+  <ion-tab-button class="tab-btn" [class.active]="vistaActiva === 'graficas'" (click)="cambiarVista('graficas')">
     <ion-icon name="bar-chart-outline"></ion-icon>
     <span>Gráficas</span>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn">
+  <ion-tab-button class="tab-btn" [class.active]="vistaActiva === 'metas'" (click)="cambiarVista('metas')">
     <ion-icon name="flag-outline"></ion-icon>
     <span>Metas</span>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn">
+  <ion-tab-button class="tab-btn" [class.active]="vistaActiva === 'alertas'" (click)="cambiarVista('alertas')">
     <ion-icon name="notifications-outline"></ion-icon>
     <span>Alertas</span>
   </ion-tab-button>

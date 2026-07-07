@@ -1,0 +1,35 @@
+<ion-content class="ion-padding" style="--background:#0d0f16;">
+  <div class="vista-bienvenida">
+    <div class="contenido-bienvenida">
+
+      <div *ngIf="finanzas.usuarioRegistrado">
+        <h1 class="titulo-bienvenida">👋 Bienvenido, {{ finanzas.nombreUsuarioGuardado }}</h1>
+        <ion-button expand="block" class="btn-bienvenida" (click)="continuar()">
+          Entrar
+        </ion-button>
+      </div>
+
+      <div *ngIf="!finanzas.usuarioRegistrado">
+        <h1 class="titulo-bienvenida">👋 Bienvenido a FinanzApp</h1>
+        <p class="subtitulo-bienvenida">Antes de comenzar, cuéntanos un poco sobre ti.</p>
+
+        <ion-item lines="none" class="input-bienvenida">
+          <ion-label position="stacked">Nombre</ion-label>
+          <ion-input [(ngModel)]="finanzas.nombreInput" placeholder="Ej: Joel"></ion-input>
+        </ion-item>
+
+        <ion-item lines="none" class="input-bienvenida">
+          <ion-label position="stacked">Edad</ion-label>
+          <ion-input type="number" [(ngModel)]="finanzas.edadInput" placeholder="Ej: 25"></ion-input>
+        </ion-item>
+
+        <p class="error-registro" *ngIf="finanzas.errorRegistro">{{ finanzas.errorRegistro }}</p>
+
+        <ion-button expand="block" class="btn-bienvenida" (click)="continuar()">
+          Comenzar
+        </ion-button>
+      </div>
+
+    </div>
+  </div>
+</ion-content>

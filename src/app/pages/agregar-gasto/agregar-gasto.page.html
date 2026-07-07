@@ -1,0 +1,96 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Registrar gasto</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+<div class="vista-agregar">
+
+  <div class="monto-grande">
+    RD$ {{ finanzas.montoGasto || '0.00' }}
+  </div>
+  <ion-input
+    type="number"
+    [(ngModel)]="finanzas.montoGasto"
+    placeholder="Toca para ingresar el monto"
+    class="input-monto">
+  </ion-input>
+
+  <h4 class="subtitulo-agregar">Categoría</h4>
+  <div class="grid-categorias">
+    <div *ngFor="let cat of finanzas.categorias"
+         class="chip-categoria"
+         [class.activa]="finanzas.categoriaSeleccionada === cat.nombre"
+         (click)="finanzas.seleccionarCategoria(cat.nombre)">
+      <span class="emoji-categoria">{{ cat.emoji }}</span>
+      <span>{{ cat.nombre }}</span>
+    </div>
+  </div>
+
+  <h4 class="subtitulo-agregar">Descripción</h4>
+  <ion-input
+    [(ngModel)]="finanzas.descripcionGasto"
+    placeholder="Ej: almuerzo en el trabajo"
+    class="input-descripcion">
+  </ion-input>
+
+  <h4 class="subtitulo-agregar">Recibo (opcional)</h4>
+  <div class="zona-foto" *ngIf="!finanzas.fotoRecibo" (click)="finanzas.tomarFotoRecibo()">
+    <ion-icon name="camera-outline"></ion-icon>
+    <p>Toca para tomar foto del recibo</p>
+  </div>
+  <div class="vista-foto" *ngIf="finanzas.fotoRecibo">
+    <img [src]="finanzas.fotoRecibo" alt="Foto del recibo" />
+    <ion-button fill="clear" color="danger" size="small" (click)="finanzas.quitarFotoRecibo()">
+      <ion-icon name="trash-outline" slot="start"></ion-icon>
+      Quitar foto
+    </ion-button>
+  </div>
+
+  <h4 class="subtitulo-agregar">Ubicación (opcional)</h4>
+  <div class="zona-ubicacion" *ngIf="!finanzas.ubicacionGasto" (click)="finanzas.obtenerUbicacion()">
+    <ion-icon name="location-outline" *ngIf="!finanzas.obteniendoUbicacion"></ion-icon>
+    <ion-spinner name="crescent" *ngIf="finanzas.obteniendoUbicacion"></ion-spinner>
+    <p>{{ finanzas.obteniendoUbicacion ? 'Buscando ubicación...' : 'Toca para usar mi ubicación' }}</p>
+  </div>
+  <p class="error-ubicacion" *ngIf="finanzas.errorUbicacion">{{ finanzas.errorUbicacion }}</p>
+  <div class="vista-mapa" *ngIf="finanzas.ubicacionGasto">
+    <iframe
+      [src]="finanzas.urlMapa"
+      width="100%"
+      height="160"
+      style="border:0; border-radius: 12px;"
+      loading="lazy">
+    </iframe>
+    <ion-button fill="clear" color="danger" size="small" (click)="finanzas.quitarUbicacion()">
+      <ion-icon name="trash-outline" slot="start"></ion-icon>
+      Quitar ubicación
+    </ion-button>
+  </div>
+
+  <h4 class="subtitulo-agregar">Fecha</h4>
+  <ion-item class="input-fecha" lines="none">
+    <ion-icon name="calendar-outline" slot="start"></ion-icon>
+    <ion-datetime-button datetime="fechaPicker"></ion-datetime-button>
+  </ion-item>
+  <ion-modal [keepContentsMounted]="true">
+    <ng-template>
+      <ion-datetime
+        id="fechaPicker"
+        presentation="date"
+        [(ngModel)]="finanzas.fechaGasto"
+        locale="es-DO">
+      </ion-datetime>
+    </ng-template>
+  </ion-modal>
+
+  <ion-button expand="block" class="btn-guardar-gasto" (click)="guardar()">
+    Guardar gasto
+  </ion-button>
+
+</div>
+</ion-content>

@@ -1,5 +1,5 @@
 ion-menu ion-content {
-  --background: var(--ion-item-background, var(--ion-background-color, #fff));
+  --background: #151a24;
 }
 
 ion-menu.md ion-content {
@@ -116,4 +116,107 @@ ion-note {
 
 ion-item.selected {
   --color: var(--ion-color-primary);
+}
+// Tarjetas dentro del menú (Conectividad y Bluetooth)
+ion-menu {
+  ion-card {
+    margin: 8px 4px;
+    border-radius: 12px;
+    background: #1e2533 !important;
+    box-shadow: none;
+  }
+
+  ion-card-header {
+    padding: 12px 12px 2px;
+  }
+
+  ion-card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #ffffff !important;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.4;
+
+    ion-icon {
+      font-size: 14px;
+      color: #a29bfe;
+    }
+  }
+
+  ion-card-content {
+    padding: 8px 12px 12px;
+  }
+}
+
+.fila-estado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 12px;
+
+  .label {
+    color: #8a94a6;
+  }
+
+  .valor {
+    font-weight: 600;
+    color: white;
+
+    &.online { color: #2ecc71; }
+    &.offline { color: #e74c3c; }
+    &.morado { color: #a29bfe; }
+  }
+}
+
+.card-bluetooth {
+  ion-button {
+    font-size: 12px;
+    margin-top: 8px;
+    --border-radius: 8px;
+  }
+}
+.menu-desplegable {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 10px;
+  margin: 8px 4px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: white;
+  font-weight: 500;
+  font-size: 14px;
+
+  ion-icon:first-child {
+    font-size: 18px;
+    color: #a29bfe;
+  }
+
+  span {
+    flex: 1;
+  }
+
+  .flecha-desplegable {
+    font-size: 16px;
+    color: #8a94a6;
+    transition: transform 0.2s ease;
+
+    &.girada {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.contenido-desplegable {
+  animation: desplegar 0.2s ease;
+}
+
+@keyframes desplegar {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }

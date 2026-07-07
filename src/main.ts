@@ -7,6 +7,7 @@ import { IonicStorageModule } from '@ionic/storage-angular';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
+import { defineCustomElements } from '@ionic/pwa-elements/loader';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -14,6 +15,7 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes),
     provideHttpClient(withInterceptors([])),
     provideIonicAngular(),
+    provideHttpClient(),
     // 👇 PROVEEDOR DEL STORAGE AQUÍ
     IonicStorageModule.forRoot({
       name: '__finanzapp_db',
@@ -23,3 +25,4 @@ bootstrapApplication(AppComponent, {
     }).providers || []
   ]
 }).catch(err => console.error(err));
+defineCustomElements(window);

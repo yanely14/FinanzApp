@@ -1,0 +1,53 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Alertas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+<div class="vista-alertas">
+
+  <div class="tarjeta-tip-audio">
+    <div class="icono-tip" (click)="finanzas.toggleTipAudio()">
+      <ion-icon [name]="finanzas.reproduciendoTip ? 'pause-outline' : 'play-outline'"></ion-icon>
+    </div>
+    <div class="info-tip">
+      <p class="label-tip">🎧 Tip financiero del día</p>
+      <p class="texto-tip">Escucha un consejo rápido para ahorrar mejor este mes</p>
+    </div>
+  </div>
+
+  <audio
+    id="audioTip"
+    (ended)="finanzas.audioTerminado()"
+    src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
+  </audio>
+
+  <h4 class="subtitulo-alertas">Hoy</h4>
+  <div class="tarjeta-alerta" *ngFor="let alerta of finanzas.alertasHoy">
+    <span class="punto-alerta" [ngClass]="alerta.tipo"></span>
+    <div class="contenido-alerta">
+      <div class="fila-titulo-alerta">
+        <h4>{{ alerta.titulo }}</h4>
+        <span class="hora-alerta">{{ alerta.hora }}</span>
+      </div>
+      <p>{{ alerta.descripcion }}</p>
+    </div>
+  </div>
+
+  <h4 class="subtitulo-alertas">Ayer</h4>
+  <div class="tarjeta-alerta" *ngFor="let alerta of finanzas.alertasAyer">
+    <span class="punto-alerta" [ngClass]="alerta.tipo"></span>
+    <div class="contenido-alerta">
+      <div class="fila-titulo-alerta">
+        <h4>{{ alerta.titulo }}</h4>
+        <span class="hora-alerta">{{ alerta.hora }}</span>
+      </div>
+      <p>{{ alerta.descripcion }}</p>
+    </div>
+  </div>
+</div>
+</ion-content>

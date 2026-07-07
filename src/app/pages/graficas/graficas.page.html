@@ -1,0 +1,54 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Gráficas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="vista-graficas">
+
+  <div class="tarjetas-resumen-graficas">
+    <div class="mini-tarjeta">
+      <p>Ingresos</p>
+      <h3 class="verde">RD$ {{ finanzas.totalIngresos | number }}</h3>
+    </div>
+    <div class="mini-tarjeta">
+      <p>Gastos</p>
+      <h3 class="roja">RD$ {{ finanzas.totalGastos | number }}</h3>
+    </div>
+  </div>
+
+  <h4 class="subtitulo-agregar">Ingresos vs Gastos (últimos 4 meses)</h4>
+
+  <div class="grafica-barras">
+    <div class="grupo-barra" *ngFor="let dato of finanzas.datosMensuales">
+      <div class="barras">
+        <div class="barra ingreso" [style.height.%]="(dato.ingresos / finanzas.maxValorGrafica) * 100"></div>
+        <div class="barra gasto" [style.height.%]="(dato.gastos / finanzas.maxValorGrafica) * 100"></div>
+      </div>
+      <span class="etiqueta-mes">{{ dato.mes }}</span>
+    </div>
+  </div>
+
+  <div class="leyenda-grafica">
+    <span class="punto-leyenda ingreso"></span> Ingresos
+    <span class="punto-leyenda gasto"></span> Gastos
+  </div>
+
+  <h4 class="subtitulo-agregar">Gastos por categoría</h4>
+
+  <div class="lista-categorias-grafica">
+    <div class="fila-categoria-grafica" *ngFor="let cat of finanzas.gastosPorCategoria">
+      <span class="nombre-categoria">{{ cat.nombre }}</span>
+      <div class="barra-fondo">
+        <div class="barra-relleno" [style.width.%]="(cat.monto / finanzas.maxGastoCategoria) * 100"></div>
+      </div>
+      <span class="monto-categoria">RD$ {{ cat.monto | number }}</span>
+    </div>
+  </div>
+
+  </div>
+</ion-content>

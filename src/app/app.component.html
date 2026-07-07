@@ -11,13 +11,86 @@
         </ion-toolbar>
       </ion-header>
 
-      <ion-content>
+      <ion-content class="ion-padding">
 
-        <ion-list>
-          <ion-item routerLink="/home">
-            🏠 Inicio
-          </ion-item>
-        </ion-list>
+         <!-- MENÚ DESPLEGABLE: CONECTIVIDAD -->
+        <div class="menu-desplegable" (click)="toggleConectividad()">
+          <ion-icon name="wifi-outline"></ion-icon>
+          <span>Conectividad</span>
+          <ion-icon
+            class="flecha-desplegable"
+            [class.girada]="mostrarConectividad"
+            name="chevron-down-outline">
+          </ion-icon>
+        </div>
+
+        <div class="contenido-desplegable" *ngIf="mostrarConectividad">
+
+          <!-- ESTADO DE CONECTIVIDAD -->
+          <ion-card class="card-estado">
+            <ion-card-header>
+              <ion-card-title>
+                <ion-icon name="wifi-outline"></ion-icon>
+                ESTADO DE CONECTIVIDAD
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+
+              <div class="fila-estado">
+                <span class="label">Estado actual</span>
+                <span class="valor" [class.online]="isOnline" [class.offline]="!isOnline">
+                  {{ isOnline ? 'En línea' : 'Sin conexión' }}
+                </span>
+              </div>
+
+              <div class="fila-estado">
+                <span class="label">Tipo de red</span>
+                <span class="valor morado">{{ tipoRed }}</span>
+              </div>
+
+            </ion-card-content>
+          </ion-card>
+
+        <!-- BLUETOOTH -->
+        <ion-card class="card-bluetooth">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon name="bluetooth-outline"></ion-icon>
+              BLUETOOTH
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+
+            <div class="fila-estado" *ngIf="!conectadoBT">
+              <span class="label">Estado</span>
+              <span class="valor offline">Sin conexión</span>
+            </div>
+
+            <div class="fila-estado" *ngIf="conectadoBT">
+              <span class="label">Estado</span>
+              <span class="valor online">Conectado</span>
+            </div>
+
+            <ion-button expand="block" size="small"
+                        [disabled]="escaneandoBT"
+                        (click)="escanearBT()">
+              <ion-icon [name]="escaneandoBT ? 'sync-outline' : 'search-outline'" slot="start"></ion-icon>
+              {{ escaneandoBT ? 'Escaneando...' : 'Buscar dispositivos' }}
+            </ion-button>
+
+            <ion-list *ngIf="dispositivosBT.length > 0" lines="none">
+              <ion-item *ngFor="let dispositivo of dispositivosBT"
+                        button
+                        (click)="conectarBT(dispositivo.deviceId)">
+                <ion-icon name="bluetooth-outline" slot="start"></ion-icon>
+                <ion-label>{{ dispositivo.nombre }}</ion-label>
+              </ion-item>
+            </ion-list>
+
+          </ion-card-content>
+        </ion-card>
+
+        </div>
 
       </ion-content>
 
