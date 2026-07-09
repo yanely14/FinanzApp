@@ -51,4 +51,8 @@
          es un requisito de Android independientemente de si usas el GPS -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+    <!-- Ubicación aproximada: usada como respaldo por el plugin de Geolocalización
+         cuando la precisión GPS exacta no está disponible o el permiso "fine" no fue otorgado -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
 </manifest>

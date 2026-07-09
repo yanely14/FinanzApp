@@ -2,7 +2,8 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideIonicAngular } from '@ionic/angular/standalone';
+import { RouteReuseStrategy } from '@angular/router';
+import { provideIonicAngular, IonicRouteStrategy } from '@ionic/angular/standalone';
 import { IonicStorageModule } from '@ionic/storage-angular';
 
 import { AppComponent } from './app/app.component';
@@ -12,6 +13,7 @@ import { defineCustomElements } from '@ionic/pwa-elements/loader';
 bootstrapApplication(AppComponent, {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideRouter(routes),
     provideHttpClient(withInterceptors([])),
     provideIonicAngular(),

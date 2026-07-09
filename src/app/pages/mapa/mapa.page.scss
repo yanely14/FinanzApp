@@ -1,0 +1,154 @@
+.vista-mapa-page {
+  padding: 0 16px 24px;
+
+  .estado-conexion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #9b91b5;
+    font-size: 12px;
+    margin: 4px 0 10px;
+
+    .punto-estado {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      &.online { background: #2ecc71; }
+      &.offline { background: #e74c3c; }
+    }
+  }
+
+  .buscador-mapa {
+    padding: 0 0 8px;
+    --background: #1f1a2e;
+    --border-radius: 14px;
+    --color: #f1eef9;
+    --placeholder-color: #5e5478;
+    --icon-color: #9b91b5;
+  }
+
+  .lista-resultados-busqueda {
+    background: #1f1a2e;
+    border: 1px solid #322a47;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    overflow: hidden;
+
+    ion-item {
+      --background: transparent;
+      --color: #f1eef9;
+      font-size: 13px;
+    }
+  }
+
+  .chips-categorias {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+
+    ion-chip {
+      --background: #1f1a2e;
+      border: 1px solid #322a47;
+      color: #9b91b5;
+      flex-shrink: 0;
+
+      .emoji-chip { margin-right: 4px; }
+
+      &.activa {
+        --background: #6c5ce7;
+        border-color: #6c5ce7;
+        color: white;
+      }
+    }
+  }
+
+  .error-mapa {
+    color: #e74c3c;
+    font-size: 12px;
+    margin: 0 0 10px;
+  }
+
+  .contenedor-leaflet {
+    width: 100%;
+    height: 320px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #322a47;
+    margin-bottom: 10px;
+  }
+
+  .fila-precision {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #9b91b5;
+    font-size: 12px;
+    margin-bottom: 14px;
+
+    ion-icon { color: #b388f5; }
+  }
+
+  .acciones-mapa {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+
+    ion-button { flex: 1; margin: 0; --border-radius: 12px; }
+  }
+
+  .lista-poi {
+    h4 { color: #f1eef9; margin: 0 0 8px; font-size: 15px; }
+
+    ion-list {
+      background: transparent;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    ion-item {
+      --background: #1f1a2e;
+      --color: #f1eef9;
+      border-radius: 12px;
+      margin-bottom: 6px;
+
+      .emoji-poi { font-size: 20px; margin-right: 4px; }
+
+      h3 { font-size: 13px; font-weight: 600; }
+      p { font-size: 11px; color: #9b91b5; }
+    }
+  }
+
+  .estado-vacio-poi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+    color: #5e5478;
+    text-align: center;
+
+    ion-icon { font-size: 34px; margin-bottom: 8px; }
+    p { font-size: 13px; color: #9b91b5; margin: 0; }
+  }
+}
+
+// Marcadores personalizados de Leaflet (íconos sin dependencias de imágenes externas)
+::ng-deep .marcador-usuario {
+  .punto-usuario {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #6c5ce7;
+    border: 3px solid white;
+    box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.35);
+  }
+}
+
+::ng-deep .marcador-busqueda,
+::ng-deep .marcador-poi {
+  font-size: 22px;
+  text-align: center;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}

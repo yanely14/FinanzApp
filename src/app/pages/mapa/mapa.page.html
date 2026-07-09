@@ -1,0 +1,93 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Mapa</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="compartir()">
+        <ion-icon slot="icon-only" name="share-social-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+<div class="vista-mapa-page">
+
+  <div class="estado-conexion">
+    <span class="punto-estado" [class.online]="isOnline" [class.offline]="!isOnline"></span>
+    {{ isOnline ? 'Conectado' : 'Sin conexión: la búsqueda de lugares necesita internet' }}
+  </div>
+
+  <ion-searchbar
+    placeholder="Buscar una dirección o lugar..."
+    [(ngModel)]="textoBusqueda"
+    (ionInput)="onBuscarInput($event)"
+    debounce="500"
+    class="buscador-mapa">
+  </ion-searchbar>
+
+  <div class="lista-resultados-busqueda" *ngIf="resultadosBusqueda.length">
+    <ion-list lines="none">
+      <ion-item button *ngFor="let lugar of resultadosBusqueda" (click)="seleccionarResultado(lugar)">
+        <ion-icon name="location-outline" slot="start"></ion-icon>
+        <ion-label class="ion-text-wrap">{{ lugar.nombre }}</ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <div class="chips-categorias">
+    <ion-chip *ngFor="let cat of categorias"
+               [class.activa]="categoriaActiva?.id === cat.id"
+               (click)="seleccionarCategoria(cat)">
+      <span class="emoji-chip">{{ cat.emoji }}</span>
+      <ion-label>{{ cat.nombre }}</ion-label>
+    </ion-chip>
+  </div>
+
+  <p class="error-mapa" *ngIf="errorMensaje">{{ errorMensaje }}</p>
+
+  <div id="mapa-contenedor" class="contenedor-leaflet"></div>
+
+  <div class="fila-precision" *ngIf="precisionMetros !== null">
+    <ion-icon name="locate-outline"></ion-icon>
+    Precisión GPS: ±{{ precisionMetros | number:'1.0-0' }} m
+  </div>
+
+  <div class="acciones-mapa">
+    <ion-button expand="block" fill="outline" (click)="usarMiUbicacion()" [disabled]="obteniendoUbicacion">
+      <ion-spinner name="crescent" slot="start" *ngIf="obteniendoUbicacion"></ion-spinner>
+      <ion-icon name="navigate-outline" slot="start" *ngIf="!obteniendoUbicacion"></ion-icon>
+      Mi ubicación
+    </ion-button>
+
+    <ion-button expand="block"
+                [fill]="siguiendoEnVivo ? 'solid' : 'outline'"
+                [color]="siguiendoEnVivo ? 'success' : 'medium'"
+                (click)="alternarSeguimientoEnVivo()">
+      <ion-icon [name]="siguiendoEnVivo ? 'radio-button-on-outline' : 'radio-button-off-outline'" slot="start"></ion-icon>
+      {{ siguiendoEnVivo ? 'Siguiendo en vivo' : 'Seguir en vivo' }}
+    </ion-button>
+  </div>
+
+  <div class="lista-poi" *ngIf="puntosInteres.length">
+    <h4>{{ categoriaActiva?.nombre }} cercanos</h4>
+    <ion-list lines="none">
+      <ion-item button *ngFor="let p of puntosInteres" (click)="enfocarPunto(p)">
+        <span class="emoji-poi" slot="start">{{ categoriaActiva?.emoji }}</span>
+        <ion-label>
+          <h3>{{ p.nombre }}</h3>
+          <p>{{ formatDistancia(p.distanciaMetros) }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <div class="estado-vacio-poi" *ngIf="categoriaActiva && !puntosInteres.length && !buscandoPOI">
+    <ion-icon name="search-outline"></ion-icon>
+    <p>No se encontraron {{ categoriaActiva.nombre.toLowerCase() }} cerca de esta zona</p>
+  </div>
+
+</div>
+</ion-content>
