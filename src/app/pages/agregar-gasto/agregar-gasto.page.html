@@ -3,12 +3,21 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>Registrar gasto</ion-title>
+    <ion-title>{{ finanzas.tipoMovimientoNuevo === 'ingreso' ? 'Registrar ingreso' : 'Registrar gasto' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
 <div class="vista-agregar">
+
+  <ion-segment [(ngModel)]="finanzas.tipoMovimientoNuevo" (ionChange)="finanzas.categoriaSeleccionada = ''" class="segmento-tipo">
+    <ion-segment-button value="gasto">
+      <ion-label>Gasto</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="ingreso">
+      <ion-label>Ingreso</ion-label>
+    </ion-segment-button>
+  </ion-segment>
 
   <div class="monto-grande">
     RD$ {{ finanzas.montoGasto || '0.00' }}
@@ -22,7 +31,7 @@
 
   <h4 class="subtitulo-agregar">Categoría</h4>
   <div class="grid-categorias">
-    <div *ngFor="let cat of finanzas.categorias"
+    <div *ngFor="let cat of finanzas.categoriasActivas"
          class="chip-categoria"
          [class.activa]="finanzas.categoriaSeleccionada === cat.nombre"
          (click)="finanzas.seleccionarCategoria(cat.nombre)">
@@ -89,7 +98,7 @@
   </ion-modal>
 
   <ion-button expand="block" class="btn-guardar-gasto" (click)="guardar()">
-    Guardar gasto
+    {{ finanzas.tipoMovimientoNuevo === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto' }}
   </ion-button>
 
 </div>

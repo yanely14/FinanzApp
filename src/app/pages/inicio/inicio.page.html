@@ -64,15 +64,17 @@
   <ion-list lines="none">
     <ion-item-sliding *ngFor="let mov of finanzas.movimientos; let i = index">
       <ion-item class="item-movimiento">
-        <div class="icono-movimiento" slot="start">{{ mov.emoji }}</div>
-        <ion-label>
-          <h4>{{ mov.titulo }}</h4>
-          <p>{{ mov.categoria }}</p>
-        </ion-label>
-        <div slot="end" [ngClass]="mov.tipo === 'ingreso' ? 'monto-positivo' : 'monto-negativo'">
-          {{ mov.tipo === 'ingreso' ? '+' : '-' }}RD${{ mov.monto | number }}
-        </div>
-      </ion-item>
+  <img *ngIf="mov.foto" [src]="mov.foto" class="foto-mini-movimiento" slot="start" />
+  <div class="icono-movimiento" slot="start" *ngIf="!mov.foto">{{ mov.emoji }}</div>
+  <ion-label>
+    <h4>{{ mov.titulo }}</h4>
+    <p>{{ mov.categoria }}</p>
+    <p *ngIf="mov.ubicacion">📍 Con ubicación</p>
+  </ion-label>
+  <div slot="end" [ngClass]="mov.tipo === 'ingreso' ? 'monto-positivo' : 'monto-negativo'">
+    {{ mov.tipo === 'ingreso' ? '+' : '-' }}RD${{ mov.monto | number }}
+  </div>
+</ion-item>
       <ion-item-options side="end">
         <ion-item-option color="danger" (click)="borrarMovimiento(i)">
           <ion-icon name="trash-outline" slot="icon-only"></ion-icon>

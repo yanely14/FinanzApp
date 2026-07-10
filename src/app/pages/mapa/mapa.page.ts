@@ -226,8 +226,15 @@ export class MapaPage implements AfterViewInit, OnDestroy {
         categoria
       );
       this.pintarMarcadoresPOI(categoria);
-    } catch {
-      this.errorMensaje = 'No se pudieron cargar los lugares cercanos. Verifica tu conexión a internet.';
+    } catch (error: any) {
+      const status = error?.status;
+      if (status === 429) {
+        this.errorMensaje = 'Demasiadas búsquedas seguidas. Espera unos segundos e intenta de nuevo.';
+      } else if (status === 504 || status === 0) {
+        this.errorMensaje = 'El servidor de mapas está saturado. Intenta de nuevo en un momento.';
+      } else {
+        this.errorMensaje = 'No se pudieron cargar los lugares cercanos. Verifica tu conexión a internet.';
+      }
       this.puntosInteres = [];
     } finally {
       this.buscandoPOI = false;

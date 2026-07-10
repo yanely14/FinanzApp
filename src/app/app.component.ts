@@ -33,7 +33,8 @@ import {
   bluetoothOutline,
   searchOutline,
   syncOutline,
-  chevronDownOutline
+  chevronDownOutline,
+  settingsOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -91,7 +92,8 @@ export class AppComponent {
       'bluetooth-outline': bluetoothOutline,
       'search-outline': searchOutline,
       'sync-outline': syncOutline,
-      'chevron-down-outline': chevronDownOutline
+      'chevron-down-outline': chevronDownOutline,
+      'settings-outline': settingsOutline
     });
 
     this.networkService.getNetworkStatus()

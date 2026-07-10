@@ -1,0 +1,101 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Configuración</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+<div class="vista-configuracion">
+
+  <div class="tarjeta-config">
+    <h4 class="titulo-tarjeta-config">
+      <ion-icon name="person-circle-outline"></ion-icon>
+      Perfil
+    </h4>
+
+    <div class="avatar-config">{{ finanzas.iniciales }}</div>
+
+    <ion-item lines="none" class="input-config">
+      <ion-label position="stacked">Nombre</ion-label>
+      <ion-input [(ngModel)]="finanzas.nombreInput" placeholder="Ej: Joel"></ion-input>
+    </ion-item>
+
+    <ion-item lines="none" class="input-config">
+      <ion-label position="stacked">Edad</ion-label>
+      <ion-input type="number" [(ngModel)]="finanzas.edadInput" placeholder="Ej: 25"></ion-input>
+    </ion-item>
+
+    <p class="error-config" *ngIf="finanzas.errorRegistro">{{ finanzas.errorRegistro }}</p>
+    <p class="exito-config" *ngIf="guardadoExitoso">✅ Perfil actualizado</p>
+
+    <ion-button expand="block" class="btn-guardar-config" (click)="guardarPerfil()">
+      Guardar cambios
+    </ion-button>
+  </div>
+
+  <div class="tarjeta-config">
+    <h4 class="titulo-tarjeta-config">
+      <ion-icon name="notifications-outline"></ion-icon>
+      Preferencias
+    </h4>
+
+    <div class="fila-toggle-config">
+      <span>Notificaciones de alertas</span>
+      <ion-toggle [(ngModel)]="notificacionesActivas"></ion-toggle>
+    </div>
+
+    <div class="fila-toggle-config">
+      <span><ion-icon name="moon-outline"></ion-icon> Modo oscuro</span>
+      <ion-toggle [(ngModel)]="modoOscuro" disabled></ion-toggle>
+    </div>
+  </div>
+
+  <div class="tarjeta-config">
+    <h4 class="titulo-tarjeta-config">
+      <ion-icon name="sync-outline"></ion-icon>
+      Sincronización
+    </h4>
+
+    <div class="fila-estado">
+      <span class="label">Estado</span>
+      <span class="valor" [class.online]="finanzas.isOnline" [class.offline]="!finanzas.isOnline">
+        {{ finanzas.isOnline ? 'En línea' : 'Sin conexión' }}
+      </span>
+    </div>
+
+    <div class="fila-estado" *ngIf="finanzas.ultimaSync">
+      <span class="label">Última sincronización</span>
+      <span class="valor">{{ finanzas.ultimaSync }}</span>
+    </div>
+
+    <div class="fila-estado">
+      <span class="label">Pendientes por enviar</span>
+      <span class="valor">{{ finanzas.datosPendientes.length }}</span>
+    </div>
+
+    <ion-button expand="block" fill="outline" class="btn-sync-config"
+                [disabled]="!finanzas.isOnline" (click)="sincronizarAhora()">
+      <ion-icon name="sync-outline" slot="start"></ion-icon>
+      Sincronizar ahora
+    </ion-button>
+  </div>
+
+  <div class="tarjeta-config">
+    <h4 class="titulo-tarjeta-config">
+      <ion-icon name="information-circle-outline"></ion-icon>
+      Cuenta
+    </h4>
+
+    <ion-button expand="block" color="danger" fill="outline" class="btn-cerrar-config" (click)="cerrarSesion()">
+      <ion-icon name="log-out-outline" slot="start"></ion-icon>
+      Cerrar sesión
+    </ion-button>
+
+    <p class="version-config">FinanzApp · versión 1.0.0</p>
+  </div>
+
+</div>
+</ion-content>

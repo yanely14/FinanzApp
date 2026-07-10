@@ -148,39 +148,67 @@ export class MapaService {
    * (motor de consultas sobre datos de OpenStreetMap). Devuelve resultados
    * ordenados por distancia.
    */
+  private radioMaximoPorCategoria(categoriaId: string): number {
+    switch (categoriaId) {
+      case 'tiendas': return 3000;
+      case 'salud':
+      case 'bancos': return 5000;
+      default: return 8000;
+    }
+  }
+
+  private readonly OVERPASS_MIRRORS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.openstreetmap.ru/api/interpreter'
+  ];
+
   async buscarPuntosInteres(centro: Coordenadas, categoria: CategoriaPOI, radioMetros = 1500): Promise<PuntoInteres[]> {
+    const radioEfectivo = Math.min(radioMetros, this.radioMaximoPorCategoria(categoria.id));
+
     const consulta = `
-      [out:json][timeout:15];
+      [out:json][timeout:25];
       (
-        node${categoria.filtroOverpass}(around:${radioMetros},${centro.lat},${centro.lng});
-        way${categoria.filtroOverpass}(around:${radioMetros},${centro.lat},${centro.lng});
+        node${categoria.filtroOverpass}(around:${radioEfectivo},${centro.lat},${centro.lng});
+        way${categoria.filtroOverpass}(around:${radioEfectivo},${centro.lat},${centro.lng});
       );
       out center 40;
     `;
-
     const cuerpo = new URLSearchParams({ data: consulta }).toString();
-    const respuesta = await firstValueFrom(
-      this.http.post<{ elements: any[] }>(this.OVERPASS_URL, cuerpo, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      })
-    );
 
-    return respuesta.elements
-      .map(el => {
-        const lat = el.lat ?? el.center?.lat;
-        const lng = el.lon ?? el.center?.lon;
-        if (lat == null || lng == null) return null;
-        return {
-          id: `${el.type}/${el.id}`,
-          nombre: el.tags?.name ?? categoria.nombre,
-          categoria: categoria.nombre,
-          lat,
-          lng,
-          distanciaMetros: this.distanciaMetros(centro, { lat, lng })
-        } as PuntoInteres;
-      })
-      .filter((p): p is PuntoInteres => p !== null)
-      .sort((a, b) => a.distanciaMetros - b.distanciaMetros);
+    let ultimoError: any = null;
+    for (const servidor of this.OVERPASS_MIRRORS) {
+      try {
+        const respuesta = await firstValueFrom(
+          this.http.post<{ elements: any[] }>(servidor, cuerpo, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          })
+        );
+
+        return respuesta.elements
+          .map(el => {
+            const lat = el.lat ?? el.center?.lat;
+            const lng = el.lon ?? el.center?.lon;
+            if (lat == null || lng == null) return null;
+            return {
+              id: `${el.type}/${el.id}`,
+              nombre: el.tags?.name ?? categoria.nombre,
+              categoria: categoria.nombre,
+              lat,
+              lng,
+              distanciaMetros: this.distanciaMetros(centro, { lat, lng })
+            } as PuntoInteres;
+          })
+          .filter((p): p is PuntoInteres => p !== null)
+          .sort((a, b) => a.distanciaMetros - b.distanciaMetros);
+      } catch (error: any) {
+        ultimoError = error;
+        const status = error?.status;
+        if (status !== 504 && status !== 429 && status !== 0) throw error;
+      }
+    }
+
+    throw ultimoError;
   }
 
   /**

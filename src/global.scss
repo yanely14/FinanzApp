@@ -1134,3 +1134,18 @@ ion-menu ion-list ion-item {
   font-size: 11px;
   margin: -4px 0 8px;
 }
+.item-menu-config {
+  --background: transparent;
+  --color: #f1eef9;
+  margin-bottom: 8px;
+
+  ion-icon {
+    color: #a29bfe;
+    font-size: 18px;
+  }
+}
+.segmento-tipo {
+  margin-bottom: 16px;
+  --background: #1e2533;
+  border-radius: 12px;
+}

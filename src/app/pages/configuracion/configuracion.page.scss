@@ -1,0 +1,85 @@
+.vista-configuracion {
+
+  .tarjeta-config {
+    background: #1e2533;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+
+    .titulo-tarjeta-config {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #a29bfe;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin: 0 0 14px;
+
+      ion-icon { font-size: 16px; }
+    }
+  }
+
+  .avatar-config {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #b388f5, #6c5ce7);
+    color: white;
+    font-weight: 700;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+
+  .input-config {
+    --background: #15101f;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    --color: #f1eef9;
+    --placeholder-color: #5e5478;
+  }
+
+  .error-config { color: #e74c3c; font-size: 12px; margin: 4px 0 10px; }
+  .exito-config { color: #2ecc71; font-size: 12px; margin: 4px 0 10px; }
+
+  .btn-guardar-config {
+    --background: #6c5ce7;
+    --border-radius: 12px;
+    margin-top: 4px;
+  }
+
+  .fila-toggle-config {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: #f1eef9;
+
+    ion-icon { font-size: 14px; margin-right: 4px; vertical-align: -2px; }
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  .btn-sync-config {
+    --border-color: #6c5ce7;
+    --color: #a29bfe;
+    --border-radius: 12px;
+    margin-top: 10px;
+  }
+
+  .btn-cerrar-config {
+    --border-radius: 12px;
+    margin-bottom: 10px;
+  }
+
+  .version-config {
+    text-align: center;
+    color: #5e5478;
+    font-size: 11px;
+    margin: 0;
+  }
+}

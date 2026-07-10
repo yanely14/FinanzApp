@@ -40,7 +40,7 @@ export class FinanzasService {
   balance = 0;
   totalIngresos = 0;
   totalGastos = 0;
-  movimientos: { titulo: string; categoria: string; monto: number; tipo: string; emoji: string }[] = [];
+  movimientos: { titulo: string; categoria: string; monto: number; tipo: string; emoji: string; ubicacion?: { lat: number; lng: number } | null; foto?: string | null }[] = [];
 
   categorias = [
     { nombre: 'Comida', emoji: '🍔' },
@@ -52,6 +52,21 @@ export class FinanzasService {
     { nombre: 'Educación', emoji: '🎓' },
     { nombre: 'Otro', emoji: '⋯' },
   ];
+
+  categoriasIngreso = [
+    { nombre: 'Salario', emoji: '💰' },
+    { nombre: 'Freelance', emoji: '💻' },
+    { nombre: 'Regalo', emoji: '🎁' },
+    { nombre: 'Inversión', emoji: '📈' },
+    { nombre: 'Venta', emoji: '🏷️' },
+    { nombre: 'Otro', emoji: '⋯' },
+  ];
+
+  tipoMovimientoNuevo: 'gasto' | 'ingreso' = 'gasto';
+
+  get categoriasActivas() {
+    return this.tipoMovimientoNuevo === 'ingreso' ? this.categoriasIngreso : this.categorias;
+  }
 
   categoriaSeleccionada = '';
   montoGasto: number | null = null;
@@ -185,6 +200,39 @@ export class FinanzasService {
     return true;
   }
 
+  // ---------- CERRAR SESIÓN ----------
+  async cerrarSesion(): Promise<void> {
+    const { Preferences } = await import('@capacitor/preferences');
+
+    await Preferences.remove({ key: 'usuario_nombre' });
+    await Preferences.remove({ key: 'usuario_edad' });
+
+    await Preferences.remove({ key: 'finanzas_balance' });
+    await Preferences.remove({ key: 'finanzas_ingresos' });
+    await Preferences.remove({ key: 'finanzas_gastos' });
+    await Preferences.remove({ key: 'finanzas_movimientos' });
+
+    await this.offlineManager.removeLocalData(this.STORAGE_KEY_PENDIENTES);
+    await this.offlineManager.removeLocalData(this.STORAGE_KEY_SINCRONIZADOS);
+    await this.offlineManager.clearQueue();
+
+    this.usuarioRegistrado = false;
+    this.nombreUsuarioGuardado = '';
+    this.edadUsuarioGuardada = '';
+    this.nombreInput = '';
+    this.edadInput = '';
+    this.saludo = 'Hola';
+    this.iniciales = '';
+
+    this.balance = 0;
+    this.totalIngresos = 0;
+    this.totalGastos = 0;
+    this.movimientos = [];
+    this.datosPendientes = [];
+    this.datosSincronizados = [];
+    this.ultimaSync = '';
+  }
+
   // ---------- CÁMARA ----------
   async tomarFotoRecibo(): Promise<void> {
     try {
@@ -273,7 +321,7 @@ export class FinanzasService {
   async guardarGasto(): Promise<void> {
     if (!this.montoGasto || !this.categoriaSeleccionada) return;
 
-    const emojiCategoria = this.categorias.find(c => c.nombre === this.categoriaSeleccionada)?.emoji || '💸';
+    const emojiCategoria = this.categoriasActivas.find(c => c.nombre === this.categoriaSeleccionada)?.emoji || '💸';
     const ahora = new Date();
 
     const nuevoMovimiento: any = {
@@ -281,16 +329,25 @@ export class FinanzasService {
       titulo: this.descripcionGasto || this.categoriaSeleccionada,
       categoria: this.categoriaSeleccionada,
       monto: this.montoGasto,
-      tipo: 'gasto',
+      tipo: this.tipoMovimientoNuevo,
       emoji: emojiCategoria,
       hora: ahora.toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' }),
       timestamp: ahora.getTime(),
-      sincronizado: false
+      sincronizado: false,
+      ubicacion: this.ubicacionGasto,
+      foto: this.fotoRecibo
     };
 
     this.movimientos = [nuevoMovimiento, ...this.movimientos];
-    this.totalGastos += this.montoGasto;
-    this.balance -= this.montoGasto;
+
+    if (this.tipoMovimientoNuevo === 'ingreso') {
+      this.totalIngresos += this.montoGasto;
+      this.balance += this.montoGasto;
+    } else {
+      this.totalGastos += this.montoGasto;
+      this.balance -= this.montoGasto;
+    }
+
     await this.guardarDatosFinancieros();
 
     if (this.isOnline) {

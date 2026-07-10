@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonMenuButton,
   IonButton, IonIcon, IonInput, IonItem, IonSpinner,
-  IonDatetime, IonDatetimeButton, IonModal
+  IonDatetime, IonDatetimeButton, IonModal, IonSegment, IonSegmentButton,
+  IonLabel
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { cameraOutline, trashOutline, locationOutline, calendarOutline } from 'ionicons/icons';
@@ -20,7 +21,7 @@ import { FinanzasService } from '../../services/finanzas.service';
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonMenuButton,
     IonButton, IonIcon, IonInput, IonItem, IonSpinner,
-    IonDatetime, IonDatetimeButton, IonModal
+    IonDatetime, IonDatetimeButton, IonModal, IonSegment, IonSegmentButton, IonLabel
   ]
 })
 export class AgregarGastoPage {

@@ -16,6 +16,7 @@ export const routes: Routes = [
       { path: 'graficas', loadComponent: () => import('./pages/graficas/graficas.page').then(m => m.GraficasPage) },
       { path: 'metas', loadComponent: () => import('./pages/metas/metas.page').then(m => m.MetasPage) },
       { path: 'alertas', loadComponent: () => import('./pages/alertas/alertas.page').then(m => m.AlertasPage) },
+      { path: 'configuracion', loadComponent: () => import('./pages/configuracion/configuracion.page').then(m => m.ConfiguracionPage) },
       { path: '', redirectTo: 'inicio', pathMatch: 'full' }
     ]
   },

@@ -1,6 +1,6 @@
 <ion-app>
 
-  <ion-split-pane contentId="main-content">
+  <ion-split-pane when="false" contentId="main-content">
 
     <!-- MENÚ LATERAL -->
     <ion-menu contentId="main-content">
@@ -11,7 +11,12 @@
         </ion-toolbar>
       </ion-header>
 
-      <ion-content class="ion-padding">
+<ion-content class="ion-padding">
+
+        <ion-item lines="none" button routerLink="/tabs/configuracion" class="item-menu-config">
+          <ion-icon name="settings-outline" slot="start"></ion-icon>
+          <ion-label>Configuración</ion-label>
+        </ion-item>
 
          <!-- MENÚ DESPLEGABLE: CONECTIVIDAD -->
         <div class="menu-desplegable" (click)="toggleConectividad()">
