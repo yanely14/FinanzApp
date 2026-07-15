@@ -875,6 +875,115 @@ ion-menu ion-list ion-item {
     p { margin: 0; color: #cfcbfa; font-size: 12px; }
     p:first-child { color: #a29bfe; margin-bottom: 4px; }
   }
+
+  .boton-abonar-meta {
+    margin-top: 10px;
+    --border-color: #6c5ce7;
+    --color: #a29bfe;
+  }
+
+  .fila-acciones-meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .boton-icono-meta {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #2a3142;
+    border: none;
+    border-radius: 10px;
+    padding: 8px;
+    color: #cfcbfa;
+    font-size: 12px;
+    font-weight: 500;
+
+    ion-icon { font-size: 14px; }
+
+    &.eliminar {
+      color: #ff6b6b;
+    }
+
+    &:active {
+      background: rgba(108, 92, 231, 0.25);
+    }
+  }
+
+  .fondo-modal-metas {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .tarjeta-formulario-meta {
+    background: #1e2533;
+    border-radius: 18px 18px 0 0;
+    padding: 18px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+
+    h4 { margin: 0 0 12px; color: white; font-size: 16px; }
+
+    ion-input {
+      --background: #2a3142;
+      --color: white;
+      --placeholder-color: #8a94a6;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      --padding-start: 12px;
+    }
+  }
+
+  .chips-sugerencia-meta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .chip-sugerencia {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: #2a3142;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #cfcbfa;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+
+    &:active {
+      background: rgba(108, 92, 231, 0.25);
+      border-color: #6c5ce7;
+    }
+  }
+
+  .fila-botones-formulario-meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+
+    ion-button { flex: 1; margin: 0; }
+  }
+
+  .error-abono-meta {
+    color: #ff6b6b;
+    font-size: 12px;
+    margin: -2px 0 10px;
+  }
 }
 
 .vista-alertas {
@@ -924,6 +1033,9 @@ ion-menu ion-list ion-item {
       &.ahorro { background: #2ecc71; }
       &.resumen { background: #3498db; }
       &.gasto { background: #f39c12; }
+      &.ingreso { background: #2ecc71; }
+      &.abono { background: #6c5ce7; }
+      &.perfil { background: #3498db; }
     }
 
     .contenido-alerta {
@@ -938,13 +1050,24 @@ ion-menu ion-list ion-item {
         .hora-alerta { color: #8a94a6; font-size: 11px; }
       }
 
-      p {
+       p {
         margin: 4px 0 0;
         color: #8a94a6;
         font-size: 12px;
         line-height: 1.4;
       }
     }
+  }
+
+  .tarjeta-sin-actividad {
+    background: rgba(108, 92, 231, 0.15);
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 10px;
+    text-align: center;
+
+    p { margin: 0; color: #cfcbfa; font-size: 12px; }
+    p:first-child { color: #a29bfe; margin-bottom: 4px; font-size: 13px; }
   }
 }
 .tarjeta-tasa-dolar {

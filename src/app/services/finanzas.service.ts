@@ -13,6 +13,14 @@ export interface ElementoLocal {
   sincronizado: boolean;
 }
 
+export interface ActividadItem {
+  tipo: string;
+  titulo: string;
+  descripcion: string;
+  timestamp: number;
+  hora: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FinanzasService {
 
@@ -82,35 +90,23 @@ export class FinanzasService {
   errorUbicacion = '';
 
   // ---------- GRÁFICAS ----------
-  datosMensuales = [
-    { mes: 'Feb', ingresos: 28000, gastos: 14000 },
-    { mes: 'Mar', ingresos: 32000, gastos: 19000 },
-    { mes: 'Abr', ingresos: 35000, gastos: 20000 },
-    { mes: 'May', ingresos: 35000, gastos: 16550 },
-  ];
-  gastosPorCategoria = [
-    { nombre: 'Comida', monto: 6200 },
-    { nombre: 'Transporte', monto: 3400 },
-    { nombre: 'Servicios', monto: 2100 },
-  ];
+  datosMensuales: { mes: string; ingresos: number; gastos: number }[] = [];
+  gastosPorCategoria: { nombre: string; monto: number }[] = [];
 
   // ---------- METAS ----------
-  metasAhorro = [
-    { nombre: 'Comprar un carro', emoji: '🚗', fechaLimite: 'dic 2026', ahorrado: 68000, meta: 100000 },
-    { nombre: 'Fondo de emergencia', emoji: '🏠', fechaLimite: 'mar 2027', ahorrado: 20000, meta: 50000 },
-    { nombre: 'Vacaciones familiares', emoji: '✈️', fechaLimite: 'ago 2026', ahorrado: 4400, meta: 20000 },
+  metasAhorro: { nombre: string; emoji: string; fechaLimite: string; ahorrado: number; meta: number }[] = [];
+
+  sugerenciasMeta = [
+    { nombre: 'Comprar un carro', emoji: '🚗' },
+    { nombre: 'Fondo de emergencia', emoji: '🏠' },
+    { nombre: 'Vacaciones', emoji: '✈️' },
+    { nombre: 'Nuevo teléfono', emoji: '📱' },
+    { nombre: 'Educación', emoji: '🎓' },
+    { nombre: 'Boda', emoji: '💍' },
   ];
 
-  // ---------- ALERTAS ----------
-  alertasHoy = [
-    { tipo: 'presupuesto', titulo: 'Presupuesto de comida superado', descripcion: 'Llevas RD$6,200 en comida. Tu límite mensual es RD$6,000. Superaste por RD$200.', hora: '10:30' },
-    { tipo: 'meta', titulo: 'Meta en riesgo', descripcion: 'Al ritmo actual, no alcanzarás la meta de vacaciones para agosto. Ajusta tus gastos.', hora: '9:00' },
-  ];
-  alertasAyer = [
-    { tipo: 'ahorro', titulo: 'Ahorro registrado', descripcion: 'Guardaste RD$2,000 para tu fondo de emergencia. Buen trabajo.', hora: '8:15' },
-    { tipo: 'resumen', titulo: 'Resumen semanal listo', descripcion: 'Tu resumen de la semana del 18-24 de mayo ya está disponible en gráficas.', hora: '7:00' },
-    { tipo: 'gasto', titulo: 'Gasto inusual detectado', descripcion: 'Registraste RD$3,500 en ocio, un 80% más que tu promedio habitual.', hora: '6:45' },
-  ];
+  // ---------- ALERTAS (registro real de actividad del usuario) ----------
+  registroActividad: ActividadItem[] = [];
   reproduciendoTip = false;
 
   // ---------- OFFLINE ----------
@@ -187,6 +183,10 @@ export class FinanzasService {
       return false;
     }
 
+    const eraRegistrado = this.usuarioRegistrado;
+    const nombreAnterior = this.nombreUsuarioGuardado;
+    const edadAnterior = this.edadUsuarioGuardada;
+
     const { Preferences } = await import('@capacitor/preferences');
     await Preferences.set({ key: 'usuario_nombre', value: this.nombreInput.trim() });
     await Preferences.set({ key: 'usuario_edad', value: edadTexto });
@@ -197,6 +197,15 @@ export class FinanzasService {
     this.errorRegistro = '';
     this.saludo = 'Hola, ' + this.nombreUsuarioGuardado;
     this.iniciales = this.nombreUsuarioGuardado.substring(0, 2).toUpperCase();
+
+    if (eraRegistrado) {
+      this.registrarActividad(
+        'perfil',
+        'Perfil actualizado',
+        `Cambiaste tu nombre de "${nombreAnterior}" a "${this.nombreUsuarioGuardado}" y tu edad de ${edadAnterior} a ${this.edadUsuarioGuardada} años.`
+      );
+    }
+
     return true;
   }
 
@@ -310,11 +319,74 @@ export class FinanzasService {
   }
 
   get maxGastoCategoria(): number {
+    if (this.gastosPorCategoria.length === 0) return 1;
     return Math.max(...this.gastosPorCategoria.map(g => g.monto));
   }
 
   porcentajeMeta(meta: any): number {
     return Math.round((meta.ahorrado / meta.meta) * 100);
+  }
+
+  agregarMeta(nombre: string, emoji: string, fechaLimite: string, montoMeta: number): void {
+    this.metasAhorro = [...this.metasAhorro, { nombre, emoji, fechaLimite, ahorrado: 0, meta: montoMeta }];
+    this.registrarActividad('meta', 'Meta creada', `Creaste la meta "${nombre}" ${emoji} por RD$ ${montoMeta.toLocaleString()}, con fecha límite ${fechaLimite}.`);
+  }
+
+  abonarAMeta(meta: { nombre: string; ahorrado: number; meta: number }, monto: number): boolean {
+    if (!monto || monto <= 0) return false;
+    if (monto > this.balance) return false;
+    meta.ahorrado += monto;
+    this.balance -= monto;
+    this.registrarActividad('abono', 'Abono a meta', `Abonaste RD$ ${monto.toLocaleString()} a la meta "${meta.nombre}".`);
+    return true;
+  }
+
+  editarMeta(metaOriginal: { nombre: string; emoji: string; fechaLimite: string; meta: number }, nombre: string, emoji: string, fechaLimite: string, montoMeta: number): void {
+    const nombreAnterior = metaOriginal.nombre;
+    metaOriginal.nombre = nombre;
+    metaOriginal.emoji = emoji;
+    metaOriginal.fechaLimite = fechaLimite;
+    metaOriginal.meta = montoMeta;
+    this.registrarActividad('meta', 'Meta editada', `Editaste la meta "${nombreAnterior}": ahora es "${nombre}", meta RD$ ${montoMeta.toLocaleString()}, fecha límite ${fechaLimite}.`);
+  }
+
+  eliminarMeta(meta: { nombre: string }): void {
+    this.metasAhorro = this.metasAhorro.filter(m => m !== meta);
+    this.registrarActividad('meta', 'Meta eliminada', `Eliminaste la meta "${meta.nombre}".`);
+  }
+
+  // ---------- REGISTRO DE ACTIVIDAD (para la página de Alertas) ----------
+  registrarActividad(tipo: string, titulo: string, descripcion: string): void {
+    const ahora = new Date();
+    this.registroActividad = [{
+      tipo,
+      titulo,
+      descripcion,
+      timestamp: ahora.getTime(),
+      hora: ahora.toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })
+    }, ...this.registroActividad];
+  }
+
+  get gruposActividad(): { etiqueta: string; items: ActividadItem[] }[] {
+    const grupos: { etiqueta: string; items: ActividadItem[] }[] = [];
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const ayer = new Date(hoy); ayer.setDate(ayer.getDate() - 1);
+
+    for (const item of this.registroActividad) {
+      const fecha = new Date(item.timestamp); fecha.setHours(0, 0, 0, 0);
+      let etiqueta: string;
+      if (fecha.getTime() === hoy.getTime()) etiqueta = 'Hoy';
+      else if (fecha.getTime() === ayer.getTime()) etiqueta = 'Ayer';
+      else etiqueta = new Date(item.timestamp).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' });
+
+      let grupo = grupos.find(g => g.etiqueta === etiqueta);
+      if (!grupo) {
+        grupo = { etiqueta, items: [] };
+        grupos.push(grupo);
+      }
+      grupo.items.push(item);
+    }
+    return grupos;
   }
 
   // ---------- GUARDAR GASTO (con offline real, reciclando "pendientes") ----------
@@ -340,13 +412,21 @@ export class FinanzasService {
 
     this.movimientos = [nuevoMovimiento, ...this.movimientos];
 
-    if (this.tipoMovimientoNuevo === 'ingreso') {
+   if (this.tipoMovimientoNuevo === 'ingreso') {
       this.totalIngresos += this.montoGasto;
       this.balance += this.montoGasto;
     } else {
       this.totalGastos += this.montoGasto;
       this.balance -= this.montoGasto;
+      this.actualizarGastosPorCategoria(this.categoriaSeleccionada, this.montoGasto);
     }
+
+    const esIngreso = this.tipoMovimientoNuevo === 'ingreso';
+    this.registrarActividad(
+      esIngreso ? 'ingreso' : 'gasto',
+      esIngreso ? 'Ingreso registrado' : 'Gasto registrado',
+      `${esIngreso ? 'Recibiste' : 'Gastaste'} RD$ ${this.montoGasto.toLocaleString()} en "${this.categoriaSeleccionada}"${this.descripcionGasto ? ' (' + this.descripcionGasto + ')' : ''}.`
+    );
 
     await this.guardarDatosFinancieros();
 
@@ -361,6 +441,15 @@ export class FinanzasService {
     this.descripcionGasto = '';
     this.fotoRecibo = null;
     this.ubicacionGasto = null;
+  }
+
+  private actualizarGastosPorCategoria(categoria: string, monto: number): void {
+    const existente = this.gastosPorCategoria.find(g => g.nombre === categoria);
+    if (existente) {
+      existente.monto += monto;
+    } else {
+      this.gastosPorCategoria = [...this.gastosPorCategoria, { nombre: categoria, monto }];
+    }
   }
 
   private async guardarGastoOnline(elemento: ElementoLocal): Promise<void> {

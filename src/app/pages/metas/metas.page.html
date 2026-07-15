@@ -4,13 +4,18 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title>Metas de ahorro</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="abrirFormulario()">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
 <div class="vista-metas">
 
-  <div class="tarjeta-meta" *ngFor="let meta of finanzas.metasAhorro">
+  <div class="tarjeta-meta" (click)="abrirMenuMeta(meta)" *ngFor="let meta of finanzas.metasAhorro">
     <div class="fila-meta-superior">
       <div class="icono-meta">{{ meta.emoji }}</div>
       <div class="info-meta">
@@ -36,9 +41,50 @@
     </div>
   </div>
 
-  <div class="tarjeta-sugerencia">
-    <p><strong>Sugerencia</strong></p>
-    <p>Si ahorras RD$5,000 más este mes, alcanzarás tu meta del carro 3 semanas antes.</p>
+  <div class="tarjeta-sugerencia" *ngIf="!finanzas.metasAhorro.length">
+    <p><strong>Aún no tienes metas</strong></p>
+    <p>Toca el botón "+" arriba para crear tu primera meta de ahorro.</p>
+  </div>
+
+  <!-- Formulario para agregar o editar meta -->
+  <div class="fondo-modal-metas" *ngIf="mostrarFormulario">
+    <div class="tarjeta-formulario-meta">
+      <h4>{{ editando ? 'Editar meta' : 'Nueva meta' }}</h4>
+
+      <p class="label-meta" *ngIf="!editando">Sugerencias:</p>
+      <div class="chips-sugerencia-meta" *ngIf="!editando">
+        <button type="button" class="chip-sugerencia" *ngFor="let s of finanzas.sugerenciasMeta" (click)="elegirSugerencia(s)">
+          {{ s.emoji }} {{ s.nombre }}
+        </button>
+      </div>
+
+      <ion-input label="Nombre" labelPlacement="stacked" [(ngModel)]="nombreNueva" placeholder="Ej: Comprar un carro"></ion-input>
+      <ion-input label="Emoji" labelPlacement="stacked" [(ngModel)]="emojiNueva" placeholder="🎯"></ion-input>
+      <ion-input label="Monto meta (RD$)" labelPlacement="stacked" type="number" [(ngModel)]="montoMetaNueva" placeholder="50000"></ion-input>
+      <ion-input label="Fecha límite" labelPlacement="stacked" [(ngModel)]="fechaLimiteNueva" placeholder="dic 2026"></ion-input>
+
+      <div class="fila-botones-formulario-meta">
+        <ion-button fill="outline" (click)="cerrarFormulario()">Cancelar</ion-button>
+        <ion-button (click)="guardarMetaNueva()">{{ editando ? 'Guardar cambios' : 'Guardar' }}</ion-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario para abonar a una meta -->
+  <div class="fondo-modal-metas" *ngIf="metaEnAbono">
+    <div class="tarjeta-formulario-meta">
+      <h4>Abonar a "{{ metaEnAbono.nombre }}"</h4>
+      <p class="label-meta">Saldo disponible: RD$ {{ finanzas.balance | number }}</p>
+
+      <ion-input label="Monto a abonar (RD$)" labelPlacement="stacked" type="number" [(ngModel)]="montoAbono" placeholder="1000"></ion-input>
+
+      <p class="error-abono-meta" *ngIf="errorAbono">{{ errorAbono }}</p>
+
+      <div class="fila-botones-formulario-meta">
+        <ion-button fill="outline" (click)="cerrarAbono()">Cancelar</ion-button>
+        <ion-button (click)="confirmarAbono()">Confirmar</ion-button>
+      </div>
+    </div>
   </div>
 
 </div>

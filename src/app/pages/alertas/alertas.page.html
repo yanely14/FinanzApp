@@ -26,28 +26,24 @@
     src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
   </audio>
 
-  <h4 class="subtitulo-alertas">Hoy</h4>
-  <div class="tarjeta-alerta" *ngFor="let alerta of finanzas.alertasHoy">
-    <span class="punto-alerta" [ngClass]="alerta.tipo"></span>
-    <div class="contenido-alerta">
-      <div class="fila-titulo-alerta">
-        <h4>{{ alerta.titulo }}</h4>
-        <span class="hora-alerta">{{ alerta.hora }}</span>
+  <div *ngFor="let grupo of finanzas.gruposActividad">
+    <h4 class="subtitulo-alertas">{{ grupo.etiqueta }}</h4>
+    <div class="tarjeta-alerta" *ngFor="let alerta of grupo.items">
+      <span class="punto-alerta" [ngClass]="alerta.tipo"></span>
+      <div class="contenido-alerta">
+        <div class="fila-titulo-alerta">
+          <h4>{{ alerta.titulo }}</h4>
+          <span class="hora-alerta">{{ alerta.hora }}</span>
+        </div>
+        <p>{{ alerta.descripcion }}</p>
       </div>
-      <p>{{ alerta.descripcion }}</p>
     </div>
   </div>
 
-  <h4 class="subtitulo-alertas">Ayer</h4>
-  <div class="tarjeta-alerta" *ngFor="let alerta of finanzas.alertasAyer">
-    <span class="punto-alerta" [ngClass]="alerta.tipo"></span>
-    <div class="contenido-alerta">
-      <div class="fila-titulo-alerta">
-        <h4>{{ alerta.titulo }}</h4>
-        <span class="hora-alerta">{{ alerta.hora }}</span>
-      </div>
-      <p>{{ alerta.descripcion }}</p>
-    </div>
+  <div class="tarjeta-sin-actividad" *ngIf="!finanzas.registroActividad.length">
+    <p><strong>Aún no tienes actividad</strong></p>
+    <p>Aquí verás cada gasto, ingreso, meta creada, abono y cambio de perfil que hagas, en orden con fecha y hora.</p>
   </div>
+
 </div>
 </ion-content>

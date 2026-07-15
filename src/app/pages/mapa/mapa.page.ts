@@ -67,8 +67,15 @@ export class MapaPage implements AfterViewInit, OnDestroy {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    this.L = await import('leaflet');
-    this.inicializarMapa();
+    const leafletModule: any = await import('leaflet');
+    this.L = leafletModule.default ?? leafletModule;
+    try {
+      this.inicializarMapa();
+    } catch (error) {
+      this.errorMensaje = 'No se pudo cargar el mapa. Intenta reabrir la app.';
+      console.error('Error al inicializar el mapa Leaflet:', error);
+      return;
+    }
     await this.usarMiUbicacion();
   }
 
