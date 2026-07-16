@@ -12,6 +12,8 @@ import {
   logOutOutline, informationCircleOutline, moonOutline
 } from 'ionicons/icons';
 import { FinanzasService } from '../../services/finanzas.service';
+import { NotificacionesService } from '../../services/notificaciones.service';
+import { Preferences } from '@capacitor/preferences';
 
 @Component({
   selector: 'app-configuracion',
@@ -27,11 +29,11 @@ import { FinanzasService } from '../../services/finanzas.service';
 export class ConfiguracionPage {
 
   notificacionesActivas = true;
-  modoOscuro = true;
   guardadoExitoso = false;
 
   constructor(
     public finanzas: FinanzasService,
+    private notificaciones: NotificacionesService,
     private router: Router,
     private alertController: AlertController
   ) {
@@ -41,14 +43,16 @@ export class ConfiguracionPage {
       'sync-outline': syncOutline,
       'log-out-outline': logOutOutline,
       'information-circle-outline': informationCircleOutline,
-      'moon-outline': moonOutline
     });
   }
 
-  ionViewWillEnter(): void {
+  async ionViewWillEnter(): Promise<void> {
     this.finanzas.nombreInput = this.finanzas.nombreUsuarioGuardado;
     this.finanzas.edadInput = this.finanzas.edadUsuarioGuardada;
     this.guardadoExitoso = false;
+
+    const guardado = await Preferences.get({ key: 'notificaciones_activas' });
+    this.notificacionesActivas = guardado.value === 'true';
   }
 
   async guardarPerfil(): Promise<void> {
@@ -57,10 +61,6 @@ export class ConfiguracionPage {
       this.guardadoExitoso = true;
       setTimeout(() => (this.guardadoExitoso = false), 2500);
     }
-  }
-
-  sincronizarAhora(): void {
-    this.finanzas.syncPendingOperations();
   }
 
   async cerrarSesion(): Promise<void> {
@@ -85,4 +85,20 @@ export class ConfiguracionPage {
 
     await alert.present();
   }
+async onToggleNotificaciones(): Promise<void> {
+    await Preferences.set({ key: 'notificaciones_activas', value: String(this.notificacionesActivas) });
+
+    if (this.notificacionesActivas) {
+      const concedido = await this.notificaciones.pedirPermiso();
+      if (concedido) {
+        await this.notificaciones.programarRecordatorioDiario();
+      } else {
+        this.notificacionesActivas = false;
+        await Preferences.set({ key: 'notificaciones_activas', value: 'false' });
+      }
+    } else {
+      await this.notificaciones.cancelarRecordatorioDiario();
+    }
+  }
+
 }

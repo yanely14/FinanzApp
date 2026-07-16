@@ -55,6 +55,9 @@ export class BluetoothService {
   }
 
   // Escanea dispositivos Bluetooth cercanos durante 5 segundos
+ private errorSubject = new BehaviorSubject<string | null>(null);
+  error$ = this.errorSubject.asObservable();
+
   async escanearDispositivos(): Promise<void> {
     try {
       const dispositivos: any[] = [];
@@ -83,6 +86,7 @@ export class BluetoothService {
 
     } catch (error) {
       console.error('Error durante el escaneo:', error);
+        this.errorSubject.next('No se pudo escanear. Verifica que el Bluetooth esté activado y que estés usando la app en un teléfono, no en el navegador.');
     }
   }
 

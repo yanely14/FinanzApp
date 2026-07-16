@@ -4,6 +4,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NetworkService } from './network.service';
 import { ExchangeRateService } from './exchange-rate.service';
 import { OfflineManagerService, OfflineQueueStatus } from './offline-manager.service';
+import { NotificacionesService } from './notificaciones.service';
 
 export interface ElementoLocal {
   id: string;
@@ -126,7 +127,8 @@ export class FinanzasService {
     private networkService: NetworkService,
     private exchangeRateService: ExchangeRateService,
     private offlineManager: OfflineManagerService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private notificaciones: NotificacionesService
   ) {
     this.inicializar();
   }
@@ -336,10 +338,16 @@ export class FinanzasService {
   abonarAMeta(meta: { nombre: string; ahorrado: number; meta: number }, monto: number): boolean {
     if (!monto || monto <= 0) return false;
     if (monto > this.balance) return false;
+    const yaEstabaCumplida = meta.ahorrado >= meta.meta;
     meta.ahorrado += monto;
     this.balance -= monto;
     this.registrarActividad('abono', 'Abono a meta', `Abonaste RD$ ${monto.toLocaleString()} a la meta "${meta.nombre}".`);
     this.guardarDatosFinancieros();
+
+    if (!yaEstabaCumplida && meta.ahorrado >= meta.meta) {
+      this.notificaciones.notificarMetaCumplida(meta.nombre);
+    }
+
     return true;
   }
 

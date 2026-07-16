@@ -79,6 +79,7 @@ export class AppComponent {
   escaneandoBT: boolean = false;
   conectadoBT: boolean = false;
   dispositivoActivoId: string = '';
+  errorBT: string | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -112,11 +113,18 @@ export class AppComponent {
   async escanearBT(): Promise<void> {
     this.escaneandoBT = true;
     this.dispositivosBT = [];
+    this.errorBT = null;
 
     this.bluetoothService.getDispositivos()
       .pipe(takeUntil(this.destroy$))
       .subscribe(dispositivos => {
         this.dispositivosBT = dispositivos;
+      });
+
+    this.bluetoothService.error$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(error => {
+        this.errorBT = error;
       });
 
     await this.bluetoothService.escanearDispositivos();

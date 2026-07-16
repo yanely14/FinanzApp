@@ -83,6 +83,7 @@
               {{ escaneandoBT ? 'Escaneando...' : 'Buscar dispositivos' }}
             </ion-button>
 
+            <p class="error-bt" *ngIf="errorBT">{{ errorBT }}</p>
             <ion-list *ngIf="dispositivosBT.length > 0" lines="none">
               <ion-item *ngFor="let dispositivo of dispositivosBT"
                         button
