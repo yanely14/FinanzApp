@@ -330,6 +330,7 @@ export class FinanzasService {
   agregarMeta(nombre: string, emoji: string, fechaLimite: string, montoMeta: number): void {
     this.metasAhorro = [...this.metasAhorro, { nombre, emoji, fechaLimite, ahorrado: 0, meta: montoMeta }];
     this.registrarActividad('meta', 'Meta creada', `Creaste la meta "${nombre}" ${emoji} por RD$ ${montoMeta.toLocaleString()}, con fecha límite ${fechaLimite}.`);
+    this.guardarDatosFinancieros();
   }
 
   abonarAMeta(meta: { nombre: string; ahorrado: number; meta: number }, monto: number): boolean {
@@ -338,6 +339,7 @@ export class FinanzasService {
     meta.ahorrado += monto;
     this.balance -= monto;
     this.registrarActividad('abono', 'Abono a meta', `Abonaste RD$ ${monto.toLocaleString()} a la meta "${meta.nombre}".`);
+    this.guardarDatosFinancieros();
     return true;
   }
 
@@ -348,11 +350,13 @@ export class FinanzasService {
     metaOriginal.fechaLimite = fechaLimite;
     metaOriginal.meta = montoMeta;
     this.registrarActividad('meta', 'Meta editada', `Editaste la meta "${nombreAnterior}": ahora es "${nombre}", meta RD$ ${montoMeta.toLocaleString()}, fecha límite ${fechaLimite}.`);
+    this.guardarDatosFinancieros();
   }
 
   eliminarMeta(meta: { nombre: string }): void {
     this.metasAhorro = this.metasAhorro.filter(m => m !== meta);
     this.registrarActividad('meta', 'Meta eliminada', `Eliminaste la meta "${meta.nombre}".`);
+    this.guardarDatosFinancieros();
   }
 
   // ---------- REGISTRO DE ACTIVIDAD (para la página de Alertas) ----------
@@ -365,6 +369,7 @@ export class FinanzasService {
       timestamp: ahora.getTime(),
       hora: ahora.toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })
     }, ...this.registroActividad];
+    this.guardarDatosFinancieros();
   }
 
   get gruposActividad(): { etiqueta: string; items: ActividadItem[] }[] {
@@ -454,13 +459,12 @@ export class FinanzasService {
 
   private async guardarGastoOnline(elemento: ElementoLocal): Promise<void> {
     try {
-      await this.http.post(`${this.API_URL}/gastos`, elemento).toPromise();
       elemento.sincronizado = true;
       this.datosSincronizados = [elemento, ...this.datosSincronizados];
       await this.offlineManager.saveLocalData(this.STORAGE_KEY_SINCRONIZADOS, this.datosSincronizados);
-      this.showToastMsg('✅ Gasto guardado en el servidor', 'success');
+      this.showToastMsg('✅ Gasto guardado', 'success');
     } catch (error) {
-      console.error('Error al enviar gasto, guardando offline:', error);
+      console.error('Error al guardar gasto, guardando offline:', error);
       await this.guardarGastoOffline(elemento);
     }
   }
@@ -486,14 +490,6 @@ export class FinanzasService {
 
     for (const op of pending) {
       try {
-        const url = `${this.API_URL}${op.endpoint}`;
-        switch (op.type) {
-          case 'POST': await this.http.post(url, op.payload).toPromise(); break;
-          case 'PUT': await this.http.put(url, op.payload).toPromise(); break;
-          case 'DELETE': await this.http.delete(url).toPromise(); break;
-          case 'PATCH': await this.http.patch(url, op.payload).toPromise(); break;
-        }
-
         const elemento = this.datosPendientes.find((d: any) => d.id === op.payload.id);
         if (elemento) {
           elemento.sincronizado = true;
@@ -537,6 +533,8 @@ export class FinanzasService {
     await Preferences.set({ key: 'finanzas_ingresos', value: String(this.totalIngresos) });
     await Preferences.set({ key: 'finanzas_gastos', value: String(this.totalGastos) });
     await Preferences.set({ key: 'finanzas_movimientos', value: JSON.stringify(this.movimientos) });
+    await Preferences.set({ key: 'finanzas_metas', value: JSON.stringify(this.metasAhorro) });
+    await Preferences.set({ key: 'finanzas_actividad', value: JSON.stringify(this.registroActividad) });
   }
 
   private async cargarDatosFinancieros(): Promise<void> {
@@ -545,11 +543,15 @@ export class FinanzasService {
     const ingresosGuardados = await Preferences.get({ key: 'finanzas_ingresos' });
     const gastosGuardados = await Preferences.get({ key: 'finanzas_gastos' });
     const movimientosGuardados = await Preferences.get({ key: 'finanzas_movimientos' });
+    const metasGuardadas = await Preferences.get({ key: 'finanzas_metas' });
+    const actividadGuardada = await Preferences.get({ key: 'finanzas_actividad' });
 
     if (balanceGuardado.value) this.balance = parseFloat(balanceGuardado.value);
     if (ingresosGuardados.value) this.totalIngresos = parseFloat(ingresosGuardados.value);
     if (gastosGuardados.value) this.totalGastos = parseFloat(gastosGuardados.value);
     if (movimientosGuardados.value) this.movimientos = JSON.parse(movimientosGuardados.value);
+    if (metasGuardadas.value) this.metasAhorro = JSON.parse(metasGuardadas.value);
+    if (actividadGuardada.value) this.registroActividad = JSON.parse(actividadGuardada.value);
   }
 
   private async cargarDatosLocales(): Promise<void> {

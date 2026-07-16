@@ -15,16 +15,19 @@
       <ion-icon [name]="finanzas.reproduciendoTip ? 'pause-outline' : 'play-outline'"></ion-icon>
     </div>
     <div class="info-tip">
-      <p class="label-tip">🎧 Tip financiero del día</p>
-      <p class="texto-tip">Escucha un consejo rápido para ahorrar mejor este mes</p>
+      <p class="label-tip">🎬 Tip financiero de la familia FinanzApp</p>
+      <p class="texto-tip">Presiona play para ver un consejo rápido de ahorro</p>
     </div>
   </div>
 
-  <audio
+  <video
     id="audioTip"
+    [class.oculto]="!finanzas.reproduciendoTip"
     (ended)="finanzas.audioTerminado()"
-    src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
-  </audio>
+    src="/assets/Video_vertical_segundo.mp4"
+    playsinline
+    class="video-tip">
+  </video>
 
   <div *ngFor="let grupo of finanzas.gruposActividad">
     <h4 class="subtitulo-alertas">{{ grupo.etiqueta }}</h4>

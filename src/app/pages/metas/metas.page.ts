@@ -41,6 +41,7 @@ export class MetasPage {
    async abrirMenuMeta(meta: any): Promise<void> {
     const sheet = await this.actionSheetController.create({
       header: `${meta.emoji} ${meta.nombre}`,
+      cssClass: 'menu-meta-sheet',
       buttons: [
         {
           text: 'Abonar',

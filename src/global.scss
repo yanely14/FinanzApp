@@ -1272,3 +1272,28 @@ ion-menu ion-list ion-item {
   --background: #1e2533;
   border-radius: 12px;
 }
+.video-tip {
+  width: 100%;
+  max-width: 200px;
+  border-radius: 12px;
+  margin-top: 8px;
+}
+.oculto { display: none; }
+
+.menu-meta-sheet {
+  .action-sheet-button {
+    color: #f3f4f6;
+  }
+
+  .action-sheet-button.action-sheet-destructive {
+    color: #f87171;
+  }
+
+  .action-sheet-title {
+    color: #f9fafb;
+  }
+
+  .action-sheet-cancel {
+    color: #93c5fd;
+  }
+}
