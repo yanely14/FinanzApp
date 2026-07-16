@@ -56,7 +56,9 @@ npx cap open android
 
 | Nombre | Matrícula | Módulo asignado |
 |---|---|---|
-| _Pendiente_ | _Pendiente_ | _Pendiente_ |
+| _Elbin Collado_ | _100072614_ | _Pendiente_ |
+| _Yanely Ledesma_ | _100072608_ | _Pendiente_ |
+| _Jogeiry Perez_ | _100072364_ | _Pendiente_ |
 
 **Asignatura:** Programación de Dispositivos Móviles — ISW-307
 **Facilitador:** Joan Manuel Gregorio Pérez
