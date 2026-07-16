@@ -40,6 +40,8 @@
     </div>
   </div>
 
+  <p class="aviso-presupuesto" *ngIf="avisoPresupuesto">⚠️ {{ avisoPresupuesto }}</p>
+
   <h4 class="subtitulo-agregar">Descripción</h4>
   <ion-input
     [(ngModel)]="finanzas.descripcionGasto"
@@ -96,6 +98,8 @@
       </ion-datetime>
     </ng-template>
   </ion-modal>
+
+  <p class="error-ubicacion" *ngIf="finanzas.errorGasto">{{ finanzas.errorGasto }}</p>
 
   <ion-button expand="block" class="btn-guardar-gasto" (click)="guardar()">
     {{ finanzas.tipoMovimientoNuevo === 'ingreso' ? 'Guardar ingreso' : 'Guardar gasto' }}

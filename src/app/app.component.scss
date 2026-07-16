@@ -10,7 +10,7 @@
 }
 
 ion-menu ion-content {
-  --background: #151a24;
+  --background: #ffffff;
 }
 
 ion-menu.md ion-content {
@@ -69,7 +69,7 @@ ion-menu.md ion-item.selected ion-icon {
 }
 
 ion-menu.md ion-item ion-icon {
-  color: #616e7e;
+  color: #6e6789;
 }
 
 ion-menu.md ion-item ion-label {
@@ -101,7 +101,7 @@ ion-menu.ios ion-item.selected ion-icon {
 
 ion-menu.ios ion-item ion-icon {
   font-size: 24px;
-  color: #73849a;
+  color: #6e6789;
 }
 
 ion-menu.ios ion-list#labels-list ion-list-header {
@@ -133,7 +133,8 @@ ion-menu {
   ion-card {
     margin: 8px 4px;
     border-radius: 12px;
-    background: #1e2533 !important;
+    background: #ffffff !important;
+    border: 1px solid #e3ddf0;
     box-shadow: none;
   }
 
@@ -145,7 +146,7 @@ ion-menu {
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    color: #ffffff !important;
+    color: #1e1832 !important;
     opacity: 0.9;
     display: flex;
     align-items: center;
@@ -154,7 +155,7 @@ ion-menu {
 
     ion-icon {
       font-size: 14px;
-      color: #a29bfe;
+      color: #5a48d6;
     }
   }
 
@@ -171,16 +172,16 @@ ion-menu {
   font-size: 12px;
 
   .label {
-    color: #8a94a6;
+    color: #6e6789;
   }
 
   .valor {
     font-weight: 600;
-    color: white;
+    color: #1e1832;
 
-    &.online { color: #2ecc71; }
-    &.offline { color: #e74c3c; }
-    &.morado { color: #a29bfe; }
+    &.online { color: #128a55; }
+    &.offline { color: #d93b52; }
+    &.morado { color: #5a48d6; }
   }
 }
 
@@ -199,13 +200,13 @@ ion-menu {
   margin: 8px 4px;
   border-radius: 10px;
   cursor: pointer;
-  color: white;
+  color: #1e1832;
   font-weight: 500;
   font-size: 14px;
 
   ion-icon:first-child {
     font-size: 18px;
-    color: #a29bfe;
+    color: #5a48d6;
   }
 
   span {
@@ -214,7 +215,7 @@ ion-menu {
 
   .flecha-desplegable {
     font-size: 16px;
-    color: #8a94a6;
+    color: #6e6789;
     transition: transform 0.2s ease;
 
     &.girada {

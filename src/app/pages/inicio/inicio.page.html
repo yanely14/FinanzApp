@@ -42,7 +42,8 @@
     <ion-card-content>
       <p class="label-balance">Balance disponible</p>
       <h1 class="monto-balance">RD$ {{ finanzas.balance | number }}</h1>
-      <p class="fecha-balance">Actualizado hoy</p>
+      <p class="fecha-balance" *ngIf="finanzas.balanceUSD !== null">≈ US$ {{ finanzas.balanceUSD | number:'1.2-2' }}</p>
+      <p class="fecha-balance" *ngIf="finanzas.balanceUSD === null">Actualizado hoy</p>
 
       <div class="resumen-ingresos-gastos">
         <div class="chip-resumen chip-ingreso">
@@ -59,29 +60,56 @@
 
   <!-- GESTO: DESLIZAR UN MOVIMIENTO PARA BORRARLO -->
   <h3 class="titulo-movimientos">Últimos movimientos</h3>
-  <p class="pista-swipe" *ngIf="finanzas.movimientos.length > 0">⬅️ Desliza un movimiento para borrarlo</p>
+  <p class="pista-swipe" *ngIf="finanzas.movimientos.length > 0">⬅️ Desliza un movimiento para editarlo o borrarlo</p>
+
+  <ion-searchbar
+    *ngIf="finanzas.movimientos.length > 0"
+    [(ngModel)]="textoFiltro"
+    placeholder="Buscar por descripción o categoría"
+    class="buscador-movimientos">
+  </ion-searchbar>
+
+  <ion-segment
+    *ngIf="categoriasDisponibles.length > 1"
+    [(ngModel)]="categoriaFiltro"
+    scrollable
+    class="filtro-categorias-movimientos">
+    <ion-segment-button value="">
+      <ion-label>Todas</ion-label>
+    </ion-segment-button>
+    <ion-segment-button *ngFor="let cat of categoriasDisponibles" [value]="cat">
+      <ion-label>{{ cat }}</ion-label>
+    </ion-segment-button>
+  </ion-segment>
 
   <ion-list lines="none">
-    <ion-item-sliding *ngFor="let mov of finanzas.movimientos; let i = index">
+    <ion-item-sliding *ngFor="let item of movimientosFiltrados">
       <ion-item class="item-movimiento">
-  <img *ngIf="mov.foto" [src]="mov.foto" class="foto-mini-movimiento" slot="start" />
-  <div class="icono-movimiento" slot="start" *ngIf="!mov.foto">{{ mov.emoji }}</div>
+  <img *ngIf="item.mov.foto" [src]="item.mov.foto" class="foto-mini-movimiento" slot="start" />
+  <div class="icono-movimiento" slot="start" *ngIf="!item.mov.foto">{{ item.mov.emoji }}</div>
   <ion-label>
-    <h4>{{ mov.titulo }}</h4>
-    <p>{{ mov.categoria }}</p>
-    <p *ngIf="mov.ubicacion">📍 Con ubicación</p>
+    <h4>{{ item.mov.titulo }}</h4>
+    <p>{{ item.mov.categoria }}</p>
+    <p *ngIf="item.mov.ubicacion">📍 Con ubicación</p>
   </ion-label>
-  <div slot="end" [ngClass]="mov.tipo === 'ingreso' ? 'monto-positivo' : 'monto-negativo'">
-    {{ mov.tipo === 'ingreso' ? '+' : '-' }}RD${{ mov.monto | number }}
+  <div slot="end" [ngClass]="item.mov.tipo === 'ingreso' ? 'monto-positivo' : 'monto-negativo'">
+    {{ item.mov.tipo === 'ingreso' ? '+' : '-' }}RD${{ item.mov.monto | number }}
   </div>
 </ion-item>
       <ion-item-options side="end">
-        <ion-item-option color="danger" (click)="borrarMovimiento(i)">
+        <ion-item-option color="medium" (click)="editarMovimiento(item.indice)">
+          <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+        </ion-item-option>
+        <ion-item-option color="danger" (click)="borrarMovimiento(item.indice)">
           <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
         </ion-item-option>
       </ion-item-options>
     </ion-item-sliding>
   </ion-list>
+
+  <p class="pista-swipe" *ngIf="finanzas.movimientos.length > 0 && movimientosFiltrados.length === 0">
+    No se encontraron movimientos con ese filtro.
+  </p>
 
   <div class="banner-offline" *ngIf="!finanzas.isOnline">
     <ion-icon name="cloud-offline-outline"></ion-icon>

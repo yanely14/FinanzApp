@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { pinGuard } from './guards/pin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'bienvenida', pathMatch: 'full' },
@@ -7,7 +8,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/bienvenida/bienvenida.page').then(m => m.BienvenidaPage)
   },
   {
+    path: 'bloqueo',
+    loadComponent: () => import('./pages/bloqueo/bloqueo.page').then(m => m.BloqueoPage)
+  },
+  {
     path: 'tabs',
+    canActivate: [pinGuard],
     loadComponent: () => import('./tabs/tabs.component').then(m => m.TabsComponent),
     children: [
       { path: 'inicio', loadComponent: () => import('./pages/inicio/inicio.page').then(m => m.InicioPage) },

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { firstValueFrom } from 'rxjs';
 import { NetworkService } from './network.service';
 import { ExchangeRateService } from './exchange-rate.service';
 import { OfflineManagerService, OfflineQueueStatus } from './offline-manager.service';
@@ -49,7 +50,7 @@ export class FinanzasService {
   balance = 0;
   totalIngresos = 0;
   totalGastos = 0;
-  movimientos: { titulo: string; categoria: string; monto: number; tipo: string; emoji: string; ubicacion?: { lat: number; lng: number } | null; foto?: string | null }[] = [];
+  movimientos: { titulo: string; categoria: string; monto: number; tipo: string; emoji: string; timestamp: number; ubicacion?: { lat: number; lng: number } | null; foto?: string | null }[] = [];
 
   categorias = [
     { nombre: 'Comida', emoji: '🍔' },
@@ -81,6 +82,7 @@ export class FinanzasService {
   montoGasto: number | null = null;
   descripcionGasto = '';
   fechaGasto: string = new Date().toISOString();
+  errorGasto = '';
 
   // ---------- RECIBO (CÁMARA) ----------
   fotoRecibo: string | null = null;
@@ -90,9 +92,70 @@ export class FinanzasService {
   obteniendoUbicacion = false;
   errorUbicacion = '';
 
-  // ---------- GRÁFICAS ----------
-  datosMensuales: { mes: string; ingresos: number; gastos: number }[] = [];
-  gastosPorCategoria: { nombre: string; monto: number }[] = [];
+  get balanceUSD(): number | null {
+    if (!this.tasaDolar || this.tasaDolar <= 0) return null;
+    return this.balance / this.tasaDolar;
+  }
+
+  // ---------- PRESUPUESTOS ----------
+  presupuestos: { categoria: string; limite: number }[] = [];
+
+  obtenerLimitePresupuesto(categoria: string): number | null {
+    return this.presupuestos.find(p => p.categoria === categoria)?.limite ?? null;
+  }
+
+  gastadoEnCategoriaEsteMes(categoria: string): number {
+    return this.movimientosDelMesActual
+      .filter(m => m.tipo === 'gasto' && m.categoria === categoria)
+      .reduce((total, m) => total + m.monto, 0);
+  }
+
+  estadoPresupuesto(categoria: string): { limite: number; gastado: number; sobrepasado: boolean } | null {
+    const limite = this.obtenerLimitePresupuesto(categoria);
+    if (!limite || limite <= 0) return null;
+
+    const gastado = this.gastadoEnCategoriaEsteMes(categoria);
+    return { limite, gastado, sobrepasado: gastado >= limite };
+  }
+
+  async establecerPresupuesto(categoria: string, limite: number): Promise<void> {
+    const existente = this.presupuestos.find(p => p.categoria === categoria);
+
+    if (!limite || limite <= 0) {
+      this.presupuestos = this.presupuestos.filter(p => p.categoria !== categoria);
+    } else if (existente) {
+      existente.limite = limite;
+    } else {
+      this.presupuestos = [...this.presupuestos, { categoria, limite }];
+    }
+
+    await this.guardarDatosFinancieros();
+  }
+
+  private async verificarPresupuesto(categoria: string): Promise<void> {
+    const presupuesto = this.presupuestos.find(p => p.categoria === categoria);
+    if (!presupuesto || presupuesto.limite <= 0) return;
+
+    const gastosCategoria = this.movimientosDelMesActual.filter(m => m.tipo === 'gasto' && m.categoria === categoria);
+    const totalGastado = gastosCategoria.reduce((total, m) => total + m.monto, 0);
+    if (totalGastado <= presupuesto.limite) return;
+
+    // Solo notificar la vez que se cruza el límite, no en cada gasto posterior
+    const gastadoAntes = totalGastado - (gastosCategoria[0]?.monto ?? 0);
+    if (gastadoAntes > presupuesto.limite) return;
+
+    const exceso = totalGastado - presupuesto.limite;
+    await this.notificaciones.notificarPresupuestoSuperado(categoria, exceso);
+    this.registrarActividad(
+      'presupuesto',
+      `Presupuesto de ${categoria} superado`,
+      `Llevas RD$ ${totalGastado.toLocaleString()} en ${categoria}. Tu límite mensual es RD$ ${presupuesto.limite.toLocaleString()}. Superaste por RD$ ${exceso.toLocaleString()}.`
+    );
+    this.showToastMsg(
+      `⚠️ Superaste tu presupuesto de ${categoria} por RD$ ${exceso.toLocaleString()}`,
+      'warning'
+    );
+  }
 
   // ---------- METAS ----------
   metasAhorro: { nombre: string; emoji: string; fechaLimite: string; ahorrado: number; meta: number }[] = [];
@@ -118,7 +181,7 @@ export class FinanzasService {
   toastMessage = '';
   toastColor: 'success' | 'warning' | 'danger' = 'success';
 
-  private readonly API_URL = 'https://api.tuservidor.com';
+  private readonly API_URL = 'https://jsonplaceholder.typicode.com/posts';
   private readonly STORAGE_KEY_PENDIENTES = 'elementos_pendientes';
   private readonly STORAGE_KEY_SINCRONIZADOS = 'elementos_sincronizados';
 
@@ -212,6 +275,21 @@ export class FinanzasService {
   }
 
   // ---------- CERRAR SESIÓN ----------
+  // ---------- EXPORTAR / RESPALDAR DATOS ----------
+  exportarDatos(): string {
+    const respaldo = {
+      exportadoEl: new Date().toISOString(),
+      usuario: this.nombreUsuarioGuardado,
+      balance: this.balance,
+      totalIngresos: this.totalIngresos,
+      totalGastos: this.totalGastos,
+      movimientos: this.movimientos,
+      metas: this.metasAhorro,
+      presupuestos: this.presupuestos
+    };
+    return JSON.stringify(respaldo, null, 2);
+  }
+
   async cerrarSesion(): Promise<void> {
     const { Preferences } = await import('@capacitor/preferences');
 
@@ -222,6 +300,9 @@ export class FinanzasService {
     await Preferences.remove({ key: 'finanzas_ingresos' });
     await Preferences.remove({ key: 'finanzas_gastos' });
     await Preferences.remove({ key: 'finanzas_movimientos' });
+    await Preferences.remove({ key: 'finanzas_metas' });
+    await Preferences.remove({ key: 'finanzas_actividad' });
+    await Preferences.remove({ key: 'finanzas_presupuestos' });
 
     await this.offlineManager.removeLocalData(this.STORAGE_KEY_PENDIENTES);
     await this.offlineManager.removeLocalData(this.STORAGE_KEY_SINCRONIZADOS);
@@ -239,6 +320,9 @@ export class FinanzasService {
     this.totalIngresos = 0;
     this.totalGastos = 0;
     this.movimientos = [];
+    this.metasAhorro = [];
+    this.registroActividad = [];
+    this.presupuestos = [];
     this.datosPendientes = [];
     this.datosSincronizados = [];
     this.ultimaSync = '';
@@ -314,10 +398,37 @@ export class FinanzasService {
   }
 
   // ---------- GRÁFICAS ----------
+  private get movimientosDelMesActual() {
+    const ahora = new Date();
+    return this.movimientos.filter(m => {
+      const fecha = new Date(m.timestamp);
+      return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear();
+    });
+  }
+
+  get ingresosMesActual(): number {
+    return this.movimientosDelMesActual
+      .filter(m => m.tipo === 'ingreso')
+      .reduce((total, m) => total + m.monto, 0);
+  }
+
+  get gastosMesActual(): number {
+    return this.movimientosDelMesActual
+      .filter(m => m.tipo === 'gasto')
+      .reduce((total, m) => total + m.monto, 0);
+  }
+
   get maxValorGrafica(): number {
-    let valores: number[] = [];
-    for (const d of this.datosMensuales) { valores.push(d.ingresos); valores.push(d.gastos); }
-    return Math.max(...valores);
+    return Math.max(this.ingresosMesActual, this.gastosMesActual, 1);
+  }
+
+  get gastosPorCategoria(): { nombre: string; monto: number }[] {
+    const categorias = new Map<string, number>();
+    for (const m of this.movimientosDelMesActual) {
+      if (m.tipo !== 'gasto') continue;
+      categorias.set(m.categoria, (categorias.get(m.categoria) ?? 0) + m.monto);
+    }
+    return Array.from(categorias, ([nombre, monto]) => ({ nombre, monto }));
   }
 
   get maxGastoCategoria(): number {
@@ -403,8 +514,16 @@ export class FinanzasService {
   }
 
   // ---------- GUARDAR GASTO (con offline real, reciclando "pendientes") ----------
-  async guardarGasto(): Promise<void> {
-    if (!this.montoGasto || !this.categoriaSeleccionada) return;
+  async guardarGasto(): Promise<boolean> {
+    if (!this.categoriaSeleccionada) {
+      this.errorGasto = 'Selecciona una categoría.';
+      return false;
+    }
+    if (!this.montoGasto || this.montoGasto <= 0) {
+      this.errorGasto = 'Ingresa un monto válido, mayor a 0.';
+      return false;
+    }
+    this.errorGasto = '';
 
     const emojiCategoria = this.categoriasActivas.find(c => c.nombre === this.categoriaSeleccionada)?.emoji || '💸';
     const ahora = new Date();
@@ -431,7 +550,6 @@ export class FinanzasService {
     } else {
       this.totalGastos += this.montoGasto;
       this.balance -= this.montoGasto;
-      this.actualizarGastosPorCategoria(this.categoriaSeleccionada, this.montoGasto);
     }
 
     const esIngreso = this.tipoMovimientoNuevo === 'ingreso';
@@ -449,30 +567,29 @@ export class FinanzasService {
       await this.guardarGastoOffline(nuevoMovimiento);
     }
 
+    if (!esIngreso) {
+      await this.verificarPresupuesto(this.categoriaSeleccionada);
+    }
+
     this.montoGasto = null;
     this.categoriaSeleccionada = '';
     this.descripcionGasto = '';
     this.fotoRecibo = null;
     this.ubicacionGasto = null;
-  }
 
-  private actualizarGastosPorCategoria(categoria: string, monto: number): void {
-    const existente = this.gastosPorCategoria.find(g => g.nombre === categoria);
-    if (existente) {
-      existente.monto += monto;
-    } else {
-      this.gastosPorCategoria = [...this.gastosPorCategoria, { nombre: categoria, monto }];
-    }
+    return true;
   }
 
   private async guardarGastoOnline(elemento: ElementoLocal): Promise<void> {
     try {
+      await firstValueFrom(this.http.post(this.API_URL, elemento));
+
       elemento.sincronizado = true;
       this.datosSincronizados = [elemento, ...this.datosSincronizados];
       await this.offlineManager.saveLocalData(this.STORAGE_KEY_SINCRONIZADOS, this.datosSincronizados);
-      this.showToastMsg('✅ Gasto guardado', 'success');
+      this.showToastMsg('✅ Gasto guardado y sincronizado', 'success');
     } catch (error) {
-      console.error('Error al guardar gasto, guardando offline:', error);
+      console.error('Error al sincronizar con el servidor, guardando offline:', error);
       await this.guardarGastoOffline(elemento);
     }
   }
@@ -498,6 +615,8 @@ export class FinanzasService {
 
     for (const op of pending) {
       try {
+        await firstValueFrom(this.http.post(this.API_URL, op.payload));
+
         const elemento = this.datosPendientes.find((d: any) => d.id === op.payload.id);
         if (elemento) {
           elemento.sincronizado = true;
@@ -535,6 +654,41 @@ export class FinanzasService {
     this.guardarDatosFinancieros();
   }
 
+  editarMovimiento(index: number, nuevoMonto: number, nuevaDescripcion: string): boolean {
+    const mov = this.movimientos[index];
+    if (!mov || !nuevoMonto || nuevoMonto <= 0) return false;
+
+    const diferencia = nuevoMonto - mov.monto;
+    if (mov.tipo === 'gasto') {
+      this.totalGastos += diferencia;
+      this.balance -= diferencia;
+    } else {
+      this.totalIngresos += diferencia;
+      this.balance += diferencia;
+    }
+
+    const movimientoActualizado = {
+      ...mov,
+      monto: nuevoMonto,
+      titulo: nuevaDescripcion.trim() || mov.categoria
+    };
+    this.movimientos = this.movimientos.map((m, i) => i === index ? movimientoActualizado : m);
+
+    this.registrarActividad(
+      'gasto',
+      'Movimiento editado',
+      `Editaste "${mov.categoria}" a RD$ ${nuevoMonto.toLocaleString()}.`
+    );
+
+    this.guardarDatosFinancieros();
+
+    if (mov.tipo === 'gasto') {
+      this.verificarPresupuesto(mov.categoria);
+    }
+
+    return true;
+  }
+
   private async guardarDatosFinancieros(): Promise<void> {
     const { Preferences } = await import('@capacitor/preferences');
     await Preferences.set({ key: 'finanzas_balance', value: String(this.balance) });
@@ -543,6 +697,7 @@ export class FinanzasService {
     await Preferences.set({ key: 'finanzas_movimientos', value: JSON.stringify(this.movimientos) });
     await Preferences.set({ key: 'finanzas_metas', value: JSON.stringify(this.metasAhorro) });
     await Preferences.set({ key: 'finanzas_actividad', value: JSON.stringify(this.registroActividad) });
+    await Preferences.set({ key: 'finanzas_presupuestos', value: JSON.stringify(this.presupuestos) });
   }
 
   private async cargarDatosFinancieros(): Promise<void> {
@@ -553,6 +708,7 @@ export class FinanzasService {
     const movimientosGuardados = await Preferences.get({ key: 'finanzas_movimientos' });
     const metasGuardadas = await Preferences.get({ key: 'finanzas_metas' });
     const actividadGuardada = await Preferences.get({ key: 'finanzas_actividad' });
+    const presupuestosGuardados = await Preferences.get({ key: 'finanzas_presupuestos' });
 
     if (balanceGuardado.value) this.balance = parseFloat(balanceGuardado.value);
     if (ingresosGuardados.value) this.totalIngresos = parseFloat(ingresosGuardados.value);
@@ -560,6 +716,7 @@ export class FinanzasService {
     if (movimientosGuardados.value) this.movimientos = JSON.parse(movimientosGuardados.value);
     if (metasGuardadas.value) this.metasAhorro = JSON.parse(metasGuardadas.value);
     if (actividadGuardada.value) this.registroActividad = JSON.parse(actividadGuardada.value);
+    if (presupuestosGuardados.value) this.presupuestos = JSON.parse(presupuestosGuardados.value);
   }
 
   private async cargarDatosLocales(): Promise<void> {

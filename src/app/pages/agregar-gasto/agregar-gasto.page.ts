@@ -36,7 +36,26 @@ export class AgregarGastoPage {
   }
 
   async guardar(): Promise<void> {
-    await this.finanzas.guardarGasto();
-    this.router.navigateByUrl('/tabs/inicio');
+    const ok = await this.finanzas.guardarGasto();
+    if (ok) {
+      this.router.navigateByUrl('/tabs/inicio');
+    }
+  }
+
+  get avisoPresupuesto(): string | null {
+    if (this.finanzas.tipoMovimientoNuevo !== 'gasto' || !this.finanzas.categoriaSeleccionada) return null;
+
+    const estado = this.finanzas.estadoPresupuesto(this.finanzas.categoriaSeleccionada);
+    if (!estado) return null;
+
+    const categoria = this.finanzas.categoriaSeleccionada;
+    const totalConEsteGasto = estado.gastado + (this.finanzas.montoGasto ?? 0);
+    if (totalConEsteGasto < estado.limite) return null;
+
+    const exceso = totalConEsteGasto - estado.limite;
+    if (exceso > 0) {
+      return `Con este gasto llevarás RD$ ${totalConEsteGasto.toLocaleString()} en ${categoria} (límite RD$ ${estado.limite.toLocaleString()}) — te pasarías por RD$ ${exceso.toLocaleString()}.`;
+    }
+    return `Llegarías justo al límite de RD$ ${estado.limite.toLocaleString()} en ${categoria} este mes.`;
   }
 }

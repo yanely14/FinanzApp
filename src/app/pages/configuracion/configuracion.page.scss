@@ -1,7 +1,8 @@
 .vista-configuracion {
 
   .tarjeta-config {
-    background: #1e2533;
+    background: #ffffff;
+    border: 1px solid #e3ddf0;
     border-radius: 14px;
     padding: 16px;
     margin-bottom: 16px;
@@ -10,7 +11,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      color: #a29bfe;
+      color: #5a48d6;
       font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -24,7 +25,7 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #b388f5, #6c5ce7);
+    background: linear-gradient(135deg, #8b7ff2, #6c5ce7);
     color: white;
     font-weight: 700;
     font-size: 20px;
@@ -35,15 +36,27 @@
   }
 
   .input-config {
-    --background: #15101f;
+    --background: #f7f5fb;
+    border: 1px solid #e3ddf0;
     border-radius: 12px;
     margin-bottom: 12px;
-    --color: #f1eef9;
-    --placeholder-color: #5e5478;
+    --color: #1e1832;
+    --placeholder-color: #a39cc0;
   }
 
-  .error-config { color: #e74c3c; font-size: 12px; margin: 4px 0 10px; }
-  .exito-config { color: #2ecc71; font-size: 12px; margin: 4px 0 10px; }
+  .error-config { color: #d93b52; font-size: 12px; margin: 4px 0 10px; }
+  .exito-config { color: #128a55; font-size: 12px; margin: 4px 0 10px; }
+
+  .estado-presupuesto-config {
+    font-size: 11.5px;
+    color: #6e6789;
+    margin: -6px 0 12px;
+
+    &.sobrepasado {
+      color: #d93b52;
+      font-weight: 600;
+    }
+  }
 
   .btn-guardar-config {
     --background: #6c5ce7;
@@ -57,7 +70,7 @@
     align-items: center;
     margin-bottom: 14px;
     font-size: 13px;
-    color: #f1eef9;
+    color: #1e1832;
 
     ion-icon { font-size: 14px; margin-right: 4px; vertical-align: -2px; }
 
@@ -66,7 +79,7 @@
 
   .btn-sync-config {
     --border-color: #6c5ce7;
-    --color: #a29bfe;
+    --color: #5a48d6;
     --border-radius: 12px;
     margin-top: 10px;
   }
@@ -78,7 +91,7 @@
 
   .version-config {
     text-align: center;
-    color: #5e5478;
+    color: #a39cc0;
     font-size: 11px;
     margin: 0;
   }

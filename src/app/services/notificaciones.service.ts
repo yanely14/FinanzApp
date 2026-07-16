@@ -40,6 +40,22 @@ export class NotificacionesService {
     }
   }
 
+  async notificarPresupuestoSuperado(categoria: string, exceso: number): Promise<void> {
+    if (!(await this.estanActivadas())) return;
+    try {
+      await LocalNotifications.schedule({
+        notifications: [{
+          id: Math.floor(Math.random() * 100000),
+          title: '⚠️ Presupuesto superado',
+          body: `Superaste tu límite mensual de "${categoria}" por RD$ ${exceso.toLocaleString()}.`,
+          schedule: { at: new Date(Date.now() + 1000) }
+        }]
+      });
+    } catch (error) {
+      console.error('Error al notificar presupuesto superado:', error);
+    }
+  }
+
   async programarRecordatorioDiario(): Promise<void> {
     try {
       await LocalNotifications.cancel({ notifications: [{ id: ID_RECORDATORIO_DIARIO }] });

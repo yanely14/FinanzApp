@@ -46,6 +46,39 @@
       <span>Notificaciones de alertas</span>
       <ion-toggle [(ngModel)]="notificacionesActivas" (ionChange)="onToggleNotificaciones()"></ion-toggle>
     </div>
+
+    <div class="fila-toggle-config">
+      <span>🔒 Bloqueo con PIN</span>
+      <ion-toggle [(ngModel)]="pinActivo" (ionChange)="onTogglePin()"></ion-toggle>
+    </div>
+
+    <ion-button expand="block" fill="clear" *ngIf="pinActivo" (click)="cambiarPin()">
+      Cambiar PIN
+    </ion-button>
+  </div>
+
+  <div class="tarjeta-config">
+    <h4 class="titulo-tarjeta-config">
+      <ion-icon name="notifications-outline"></ion-icon>
+      Presupuestos mensuales por categoría
+    </h4>
+
+    <div *ngFor="let cat of presupuestosInput">
+      <ion-item lines="none" class="input-config">
+        <ion-label position="stacked">{{ cat.emoji }} {{ cat.nombre }}</ion-label>
+        <ion-input
+          type="number"
+          placeholder="Sin límite"
+          [(ngModel)]="cat.limite"
+          (ionBlur)="guardarPresupuesto(cat.nombre, cat.limite)">
+        </ion-input>
+      </ion-item>
+      <p class="estado-presupuesto-config"
+         *ngIf="cat.limite"
+         [class.sobrepasado]="finanzas.gastadoEnCategoriaEsteMes(cat.nombre) >= cat.limite">
+        Gastado este mes: RD$ {{ finanzas.gastadoEnCategoriaEsteMes(cat.nombre) | number }} de RD$ {{ cat.limite | number }}
+      </p>
+    </div>
   </div>
 
   <div class="tarjeta-config">
@@ -53,6 +86,11 @@
       <ion-icon name="information-circle-outline"></ion-icon>
       Cuenta
     </h4>
+
+    <ion-button expand="block" fill="outline" class="btn-exportar-config" (click)="exportarDatos()">
+      <ion-icon name="download-outline" slot="start"></ion-icon>
+      Exportar / respaldar mis datos
+    </ion-button>
 
     <ion-button expand="block" color="danger" fill="outline" class="btn-cerrar-config" (click)="cerrarSesion()">
       <ion-icon name="log-out-outline" slot="start"></ion-icon>

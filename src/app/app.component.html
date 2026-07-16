@@ -125,4 +125,13 @@
 
   </ion-split-pane>
 
+  <ion-toast
+    [isOpen]="finanzas.showToast"
+    [message]="finanzas.toastMessage"
+    [color]="finanzas.toastColor"
+    [duration]="4000"
+    position="top"
+    (didDismiss)="finanzas.showToast = false">
+  </ion-toast>
+
 </ion-app>

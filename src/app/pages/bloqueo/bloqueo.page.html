@@ -1,0 +1,27 @@
+<ion-content class="ion-padding">
+  <div class="vista-bienvenida">
+    <div class="contenido-bienvenida">
+
+      <h1 class="titulo-bienvenida">🔒 FinanzApp bloqueada</h1>
+      <p class="subtitulo-bienvenida">Ingresa tu PIN para continuar.</p>
+
+      <ion-item lines="none" class="input-bienvenida">
+        <ion-label position="stacked">PIN</ion-label>
+        <ion-input
+          type="password"
+          inputmode="numeric"
+          maxlength="6"
+          [(ngModel)]="pin"
+          placeholder="••••">
+        </ion-input>
+      </ion-item>
+
+      <p class="error-registro" *ngIf="error">{{ error }}</p>
+
+      <ion-button expand="block" class="btn-bienvenida" (click)="desbloquear()">
+        Desbloquear
+      </ion-button>
+
+    </div>
+  </div>
+</ion-content>

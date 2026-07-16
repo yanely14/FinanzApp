@@ -21,15 +21,15 @@
     </div>
   </div>
 
-  <h4 class="subtitulo-agregar">Ingresos vs Gastos (últimos 4 meses)</h4>
+  <h4 class="subtitulo-agregar">Ingresos vs Gastos ({{ finanzas.fechaTexto }})</h4>
 
   <div class="grafica-barras">
-    <div class="grupo-barra" *ngFor="let dato of finanzas.datosMensuales">
+    <div class="grupo-barra">
       <div class="barras">
-        <div class="barra ingreso" [style.height.%]="(dato.ingresos / finanzas.maxValorGrafica) * 100"></div>
-        <div class="barra gasto" [style.height.%]="(dato.gastos / finanzas.maxValorGrafica) * 100"></div>
+        <div class="barra ingreso" [style.height.%]="(finanzas.ingresosMesActual / finanzas.maxValorGrafica) * 100"></div>
+        <div class="barra gasto" [style.height.%]="(finanzas.gastosMesActual / finanzas.maxValorGrafica) * 100"></div>
       </div>
-      <span class="etiqueta-mes">{{ dato.mes }}</span>
+      <span class="etiqueta-mes">{{ finanzas.fechaTexto }}</span>
     </div>
   </div>
 

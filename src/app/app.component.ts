@@ -19,11 +19,13 @@ import {
   IonCardTitle,
   IonIcon,
   IonButton,
-  IonLabel
+  IonLabel,
+  IonToast
 } from '@ionic/angular/standalone';
 
 import { NetworkService } from './services/network.service';
 import { BluetoothService } from './services/bluetooth.service';
+import { FinanzasService } from './services/finanzas.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
@@ -61,7 +63,8 @@ import {
     IonCardTitle,
     IonIcon,
     IonButton,
-    IonLabel
+    IonLabel,
+    IonToast
   ],
 })
 export class AppComponent {
@@ -84,6 +87,7 @@ export class AppComponent {
   private destroy$ = new Subject<void>();
 
   constructor(
+    public finanzas: FinanzasService,
     private networkService: NetworkService,
     private bluetoothService: BluetoothService
   ) {

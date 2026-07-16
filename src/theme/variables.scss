@@ -1,21 +1,48 @@
 // For information on how to create your own theme, please refer to:
 // https://ionicframework.com/docs/theming/
+//
+// FinanzApp es de tema claro fijo (sin modo oscuro). Estos tokens deben
+// coincidir con la paleta usada en src/global.scss.
+
+@use "sass:color";
 
 :root {
-  --ion-background-color: #0d1b2a;
-  --ion-background-color-rgb: 13, 27, 42;
+  --ion-background-color: #f7f5fb;
+  --ion-background-color-rgb: 247, 245, 251;
 
-  --ion-text-color: #e0e6f0;
-  --ion-text-color-rgb: 224, 230, 240;
+  --ion-text-color: #1e1832;
+  --ion-text-color-rgb: 30, 24, 50;
 
-  --ion-card-background: #1a2a3a;
+  --ion-card-background: #ffffff;
 
-  --ion-color-primary: #4f8ef7;
-  --ion-color-primary-rgb: 79, 142, 247;
+  --ion-color-primary: #6c5ce7;
+  --ion-color-primary-rgb: 108, 92, 231;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #{color.adjust(#6c5ce7, $lightness: -8%)};
+  --ion-color-primary-tint: #{color.adjust(#6c5ce7, $lightness: 8%)};
 
-  --ion-color-success: #2ecc71;
-  --ion-color-success-rgb: 46, 204, 113;
+  --ion-color-success: #22b573;
+  --ion-color-success-rgb: 34, 181, 115;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #{color.adjust(#22b573, $lightness: -8%)};
+  --ion-color-success-tint: #{color.adjust(#22b573, $lightness: 8%)};
 
-  --ion-toolbar-background: #0d1b2a;
-  --ion-toolbar-color: #e0e6f0;
+  --ion-color-danger: #f0576c;
+  --ion-color-danger-rgb: 240, 87, 108;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #{color.adjust(#f0576c, $lightness: -8%)};
+  --ion-color-danger-tint: #{color.adjust(#f0576c, $lightness: 8%)};
+
+  --ion-color-warning: #e8a33d;
+  --ion-color-warning-rgb: 232, 163, 61;
+  --ion-color-warning-contrast: #1e1832;
+  --ion-color-warning-contrast-rgb: 30, 24, 50;
+  --ion-color-warning-shade: #{color.adjust(#e8a33d, $lightness: -8%)};
+  --ion-color-warning-tint: #{color.adjust(#e8a33d, $lightness: 8%)};
+
+  --ion-toolbar-background: #f7f5fb;
+  --ion-toolbar-color: #1e1832;
 }
